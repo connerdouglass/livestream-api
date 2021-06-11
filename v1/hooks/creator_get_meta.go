@@ -37,9 +37,11 @@ func GetCreatorMeta(
 
 		// Respond with the info about the creator
 		c.JSON(http.StatusOK, gin.H{
-			"id":       creator.ID,
-			"username": creator.Username,
-			"name":     creator.Name,
+			"data": gin.H{
+				"id":       creator.ID,
+				"username": creator.Username,
+				"name":     creator.Name,
+			},
 		})
 
 	}
