@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +37,7 @@ func CheckAuth(authTokensService *services.AuthTokensService) gin.HandlerFunc {
 		// Find the account of the token
 		account, err := authTokensService.GetAccountForToken(token)
 		if err != nil {
-			fmt.Println("auth token error: ", err)
+			// fmt.Println("auth token error: ", err)
 			c.Next()
 			return
 		}

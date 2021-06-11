@@ -48,7 +48,9 @@ func (s *Server) setupRtmpHooks(g *gin.RouterGroup) {
 	g.Use(middleware.RequireRtmpAuth(s.RtmpAuthService))
 
 	// Register RTMP-only hooks here
-	// ...
+	g.POST("/stream/get-config", hooks.RtmpGetStreamConfig(
+		s.StreamsService,
+	))
 
 }
 

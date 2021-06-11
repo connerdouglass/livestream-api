@@ -17,8 +17,9 @@ type Stream struct {
 	ID                 uint64 `gorm:"primaryKey"`
 	CreatorProfileID   uint64
 	CreatorProfile     *CreatorProfile
+	Identifier         string
 	Title              string
-	StreamKeyHash      string
+	StreamKey          string
 	Status             string
 	ScheduledStartDate time.Time
 	EndedDate          sql.NullTime
