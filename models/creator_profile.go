@@ -10,6 +10,7 @@ type CreatorProfile struct {
 	ID          uint64 `gorm:"primaryKey"`
 	AccountID   uint64
 	Account     *Account
+	Username    string
 	Name        string
 	CreatedDate time.Time
 	DeletedDate sql.NullTime

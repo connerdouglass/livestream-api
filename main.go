@@ -58,6 +58,7 @@ func main() {
 		DB:            db,
 		SigningPepper: os.Getenv("AUTH_TOKEN_SIGNING_PEPPER"),
 	}
+	creatorsService := &services.CreatorsService{DB: db}
 	rtmpAuthService := &services.RtmpAuthService{
 		RtmpServerPasscode: os.Getenv("RTMP_SERVER_PASSCODE"),
 	}
@@ -80,6 +81,7 @@ func main() {
 	// Create the API instance
 	api := &v1.Server{
 		AuthTokensService: authTokensService,
+		CreatorsService:   creatorsService,
 		RtmpAuthService:   rtmpAuthService,
 		StreamsService:    streamsService,
 	}

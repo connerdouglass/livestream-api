@@ -10,6 +10,7 @@ import (
 // Server is the API server instance
 type Server struct {
 	AuthTokensService *services.AuthTokensService
+	CreatorsService   *services.CreatorsService
 	RtmpAuthService   *services.RtmpAuthService
 	StreamsService    *services.StreamsService
 }
@@ -35,6 +36,10 @@ func (s *Server) Setup(g *gin.RouterGroup) {
 func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 
 	// Register public API routes
+	g.POST("/creator/get-meta", hooks.GetCreatorMeta(
+		s.CreatorsService,
+		s.StreamsService,
+	))
 	g.POST("/stream/get-meta", hooks.GetStreamMeta(
 		s.StreamsService,
 	))
