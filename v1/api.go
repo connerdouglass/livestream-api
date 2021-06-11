@@ -51,6 +51,9 @@ func (s *Server) setupRtmpHooks(g *gin.RouterGroup) {
 	g.POST("/stream/get-config", hooks.RtmpGetStreamConfig(
 		s.StreamsService,
 	))
+	g.POST("/stream/set-status", hooks.RtmpSetStreamStatus(
+		s.StreamsService,
+	))
 
 }
 

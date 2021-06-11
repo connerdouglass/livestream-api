@@ -1,7 +1,9 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/godocompany/livestream-api/models"
@@ -115,4 +117,43 @@ func (s *StreamsService) GenerateUnusedStreamKey() (string, error) {
 		}
 	}
 	return "", errors.New("GenerateUnusedStreamKey exceeded max attempts")
+}
+
+func (s *StreamsService) UpdateStatus(stream *models.Stream, status string) error {
+
+	// If the stream is nil
+	if stream == nil {
+		return errors.New("cannot update nil stream status")
+	}
+
+	// Define the slice of permitted status values
+	possibleStatusValues := []string{
+		models.StreamStatus_Upcoming,
+		models.StreamStatus_Live,
+		models.StreamStatus_Ended,
+		models.StreamStatus_Cancelled,
+	}
+
+	// Make sure the status value is one of the permitted values
+	contained := false
+	for _, option := range possibleStatusValues {
+		if option == status {
+			contained = true
+			break
+		}
+	}
+	if !contained {
+		return fmt.Errorf("unsupported stream status value: \"%s\"", status)
+	}
+
+	// Update the stream
+	stream.Status = status
+	if status == models.StreamStatus_Ended {
+		stream.EndedDate = sql.NullTime{
+			Valid: true,
+			Time:  time.Now(),
+		}
+	}
+	return s.DB.Save(stream).Error
+
 }
