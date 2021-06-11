@@ -169,7 +169,24 @@ func (s *StreamsService) GetLiveStreamForCreator(creator *models.CreatorProfile)
 	err := s.DB.
 		Where("creator_profile_id = ?", creator.ID).
 		Where("status = ?", models.StreamStatus_Live).
-		Where("streaming = 1").
+		First(&stream).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &stream, nil
+}
+
+// GetNextStreamForCreator gets the stream that is next upcoming (and not currently live) for a creator
+func (s *StreamsService) GetNextStreamForCreator(creator *models.CreatorProfile) (*models.Stream, error) {
+	var stream models.Stream
+	err := s.DB.
+		Where("creator_profile_id = ?", creator.ID).
+		Where("status = ?", models.StreamStatus_Upcoming).
+		Order("scheduled_start_date ASC").
 		First(&stream).
 		Error
 	if err != nil {

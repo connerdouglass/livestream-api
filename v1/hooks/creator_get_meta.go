@@ -43,6 +43,12 @@ func GetCreatorMeta(
 			fmt.Println("Error fetching live stream: ", err.Error())
 		}
 
+		// Get the next upcoming stream (not yet live)
+		nextStream, err := streamsService.GetNextStreamForCreator(creator)
+		if err != nil {
+			fmt.Println("Error fetching next upcoming stream: ", err.Error())
+		}
+
 		// Respond with the info about the creator
 		c.JSON(http.StatusOK, gin.H{
 			"data": gin.H{
@@ -50,6 +56,7 @@ func GetCreatorMeta(
 				"username":    creator.Username,
 				"name":        creator.Name,
 				"live_stream": serializeStream(liveStream),
+				"next_stream": serializeStream(nextStream),
 			},
 		})
 
