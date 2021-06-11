@@ -162,3 +162,21 @@ func (s *StreamsService) UpdateStatus(stream *models.Stream, status string) erro
 	return s.DB.Save(stream).Error
 
 }
+
+// GetLiveStreamForCreator gets the stream that is currently live for a creator
+func (s *StreamsService) GetLiveStreamForCreator(creator *models.CreatorProfile) (*models.Stream, error) {
+	var stream models.Stream
+	err := s.DB.
+		Where("creator_profile_id = ?", creator.ID).
+		Where("status = ?", models.StreamStatus_Live).
+		Where("streaming = 1").
+		First(&stream).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &stream, nil
+}

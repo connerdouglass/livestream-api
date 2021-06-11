@@ -1,9 +1,11 @@
 package hooks
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
 )
 
@@ -35,14 +37,34 @@ func GetCreatorMeta(
 			return
 		}
 
+		// Get the currently-live stream
+		liveStream, err := streamsService.GetLiveStreamForCreator(creator)
+		if err != nil {
+			fmt.Println("Error fetching live stream: ", err.Error())
+		}
+
 		// Respond with the info about the creator
 		c.JSON(http.StatusOK, gin.H{
 			"data": gin.H{
-				"id":       creator.ID,
-				"username": creator.Username,
-				"name":     creator.Name,
+				"id":          creator.ID,
+				"username":    creator.Username,
+				"name":        creator.Name,
+				"live_stream": serializeStream(liveStream),
 			},
 		})
 
+	}
+}
+
+func serializeStream(stream *models.Stream) map[string]interface{} {
+	if stream == nil {
+		return nil
+	}
+	return map[string]interface{}{
+		"id":                   stream.ID,
+		"identifier":           stream.Identifier,
+		"title":                stream.Title,
+		"status":               stream.Status,
+		"scheduled_start_date": stream.ScheduledStartDate.Unix(),
 	}
 }
