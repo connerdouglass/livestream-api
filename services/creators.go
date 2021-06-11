@@ -42,6 +42,36 @@ func (s *CreatorsService) GetCreatorByUsername(username string) (*models.Creator
 
 }
 
+// DoesCreatorOwnStream checks if the given creator owns the given stream
+func (s *CreatorsService) DoesCreatorOwnStream(creator *models.CreatorProfile, stream *models.Stream) bool {
+
+	// If either one is nil, return false
+	if creator == nil || stream == nil {
+		return false
+	}
+
+	// Check if the identifiers match
+	return creator.ID == stream.CreatorProfileID
+
+}
+
+// GetCreatorByID gets the creator with the given identifier
+func (s *CreatorsService) GetCreatorByID(creatorID uint64) (*models.CreatorProfile, error) {
+	var creator models.CreatorProfile
+	err := s.DB.
+		Where("deleted_date IS NULL").
+		Where("id = ?", creatorID).
+		First(&creator).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &creator, nil
+}
+
 // ValidateUsernae checks if the provided username is valid
 func (s *CreatorsService) ValidateUsername(username string) bool {
 	pattern := regexp.MustCompile(`^\w+$`)

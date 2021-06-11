@@ -21,6 +21,7 @@ type Stream struct {
 	Title              string
 	StreamKey          string
 	Status             string
+	Streaming          bool
 	ScheduledStartDate time.Time
 	EndedDate          sql.NullTime
 	CreatedDate        time.Time

@@ -9,6 +9,7 @@ import (
 
 // Server is the API server instance
 type Server struct {
+	AccountsService   *services.AccountsService
 	AuthTokensService *services.AuthTokensService
 	CreatorsService   *services.CreatorsService
 	RtmpAuthService   *services.RtmpAuthService
@@ -56,7 +57,7 @@ func (s *Server) setupRtmpHooks(g *gin.RouterGroup) {
 	g.POST("/stream/get-config", hooks.RtmpGetStreamConfig(
 		s.StreamsService,
 	))
-	g.POST("/stream/set-status", hooks.RtmpSetStreamStatus(
+	g.POST("/stream/set-streaming", hooks.RtmpSetStreaming(
 		s.StreamsService,
 	))
 
@@ -69,6 +70,10 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 	g.Use(middleware.RequireLogin())
 
 	// Register authenticated API routes
-	// ...
+	g.POST("/stream/set-status", hooks.SetStreamStatus(
+		s.AccountsService,
+		s.CreatorsService,
+		s.StreamsService,
+	))
 
 }

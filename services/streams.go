@@ -119,6 +119,11 @@ func (s *StreamsService) GenerateUnusedStreamKey() (string, error) {
 	return "", errors.New("GenerateUnusedStreamKey exceeded max attempts")
 }
 
+func (s *StreamsService) UpdateStreaming(stream *models.Stream, streaming bool) error {
+	stream.Streaming = streaming
+	return s.DB.Save(stream).Error
+}
+
 func (s *StreamsService) UpdateStatus(stream *models.Stream, status string) error {
 
 	// If the stream is nil

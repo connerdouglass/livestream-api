@@ -54,6 +54,7 @@ func main() {
 	// Create all the service instances
 	//================================================================================
 
+	accountsService := &services.AccountsService{DB: db}
 	authTokensService := &services.AuthTokensService{
 		DB:            db,
 		SigningPepper: os.Getenv("AUTH_TOKEN_SIGNING_PEPPER"),
@@ -80,6 +81,7 @@ func main() {
 
 	// Create the API instance
 	api := &v1.Server{
+		AccountsService:   accountsService,
 		AuthTokensService: authTokensService,
 		CreatorsService:   creatorsService,
 		RtmpAuthService:   rtmpAuthService,

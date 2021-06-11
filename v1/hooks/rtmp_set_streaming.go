@@ -7,18 +7,18 @@ import (
 	"github.com/godocompany/livestream-api/services"
 )
 
-type RtmpSetStreamStatusReq struct {
-	StreamID string `json:"stream_id"`
-	Status   string `json:"status"`
+type RtmpSetStreamingReq struct {
+	StreamID  string `json:"stream_id"`
+	Streaming bool   `json:"streaming"`
 }
 
-func RtmpSetStreamStatus(
+func RtmpSetStreaming(
 	streamsService *services.StreamsService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get the request body
-		var req RtmpSetStreamStatusReq
+		var req RtmpSetStreamingReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -36,7 +36,7 @@ func RtmpSetStreamStatus(
 		}
 
 		// Update the stream status
-		if err := streamsService.UpdateStatus(stream, req.Status); err != nil {
+		if err := streamsService.UpdateStreaming(stream, req.Streaming); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
