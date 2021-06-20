@@ -84,7 +84,7 @@ func (s *CreatorsService) GetCreatorsByAccountID(accountID uint64) ([]*models.Cr
 	err := s.DB.
 		Where("account_id = ?", accountID).
 		Where("deleted_date IS NULL").
-		Find(creators).
+		Find(&creators).
 		Error
 	if err != nil {
 		return nil, err

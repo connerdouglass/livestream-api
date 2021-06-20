@@ -65,7 +65,7 @@ func (s *StreamsService) GetAllStreamsForCreatorID(creatorID uint64) ([]*models.
 	err := s.DB.
 		Where("creator_id = ?", creatorID).
 		Where("deleted_date IS NULL").
-		Find(streams).
+		Find(&streams).
 		Error
 	if err != nil {
 		return nil, err
