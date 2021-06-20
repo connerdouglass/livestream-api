@@ -47,7 +47,7 @@ func (s *AuthTokensService) CreateToken(
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
 
 	// Sign the token to a string
-	return token.SignedString(s.getSigningSecretKey(account.Secret))
+	return token.SignedString(s.getSigningSecretKey(account.PasswordSalt))
 
 }
 
@@ -68,7 +68,7 @@ func (s *AuthTokensService) GetAccountForToken(token string) (*models.Account, e
 		}
 
 		// Get the signing secret for the account
-		return s.getSigningSecretKey(account.Secret), nil
+		return s.getSigningSecretKey(account.PasswordSalt), nil
 
 	})
 	if err != nil {

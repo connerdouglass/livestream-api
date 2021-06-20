@@ -37,6 +37,10 @@ func (s *Server) Setup(g *gin.RouterGroup) {
 func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 
 	// Register public API routes
+	g.POST("/auth/login", hooks.AuthLogin(
+		s.AccountsService,
+		s.AuthTokensService,
+	))
 	g.POST("/creator/get-meta", hooks.GetCreatorMeta(
 		s.CreatorsService,
 		s.StreamsService,
