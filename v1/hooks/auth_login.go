@@ -2,7 +2,6 @@ package hooks
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/godocompany/livestream-api/services"
@@ -16,6 +15,7 @@ type AuthLoginReq struct {
 func AuthLogin(
 	accountsService *services.AccountsService,
 	authTokensService *services.AuthTokensService,
+	creatorsService *services.CreatorsService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -40,11 +40,11 @@ func AuthLogin(
 			return
 		}
 
-		// Create an authentication token for the account
-		token, err := authTokensService.CreateToken(
+		// Serialize the whoami info
+		whoami, err := serializeWhoAmI(
 			account,
-			time.Now(),
-			time.Now().Add(time.Hour*24*30),
+			authTokensService,
+			creatorsService,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -53,11 +53,7 @@ func AuthLogin(
 
 		// Return the whoami info for this account
 		c.JSON(http.StatusOK, gin.H{
-			"data": gin.H{
-				"id":    account.ID,
-				"email": account.Email,
-				"token": token,
-			},
+			"data": whoami,
 		})
 
 	}

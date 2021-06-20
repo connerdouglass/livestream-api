@@ -59,6 +59,20 @@ func (s *StreamsService) CreateStream(
 
 }
 
+// GetAllStreamsForCreatorID gets all streams past, present, and future for the given creator ID
+func (s *StreamsService) GetAllStreamsForCreatorID(creatorID uint64) ([]*models.Stream, error) {
+	var streams []*models.Stream
+	err := s.DB.
+		Where("creator_id = ?", creatorID).
+		Where("deleted_date IS NULL").
+		Find(streams).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return streams, nil
+}
+
 func (s *StreamsService) GetStreamByIdentifier(identifier string) (*models.Stream, error) {
 	var stream models.Stream
 	err := s.DB.
