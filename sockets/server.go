@@ -18,12 +18,7 @@ func NewServer() *Server {
 }
 
 // Setup prepares all of the handlers for the socket server and mounts it to the Gin router
-func (s *Server) Setup(g *gin.RouterGroup) {
-
-	// Mount the socket server to the Gin router
-	g.Use(func(c *gin.Context) {
-		s.SocketSrv.ServeHTTP(c.Writer, c.Request)
-	})
+func (s *Server) Setup() {
 
 	// Add handlers to the socket server
 	s.SocketSrv.OnConnect("/", func(conn socketio.Conn) error {
@@ -37,4 +32,8 @@ func (s *Server) Run() {
 	if err := s.SocketSrv.Serve(); err != nil {
 		fmt.Println("Socket server error: ", err.Error())
 	}
+}
+
+func (s *Server) Handler(c *gin.Context) {
+	s.SocketSrv.ServeHTTP(c.Writer, c.Request)
 }

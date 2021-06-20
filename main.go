@@ -84,11 +84,13 @@ func main() {
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowOrigins = GetAllowedOrigins()
 	corsCfg.AllowCredentials = true
+	corsCfg.AllowWebSockets = true
 	corsCfg.AddAllowHeaders("Accept", "User-Agent", "Authorization")
 	r.Use(cors.New(corsCfg))
 
-	// Mount the socket server
-	socket.Setup(r.Group("socket.io"))
+	// Mount the socket server to the Gin router
+	socket.Setup()
+	r.GET("/socket.io", socket.Handler)
 
 	// Create the API instance
 	api := &v1.Server{
