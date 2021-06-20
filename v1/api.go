@@ -74,6 +74,9 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 	g.Use(middleware.RequireLogin())
 
 	// Register authenticated API routes
+	g.POST("/auth/whoami", hooks.AuthWhoAmI(
+		s.AuthTokensService,
+	))
 	g.POST("/stream/set-status", hooks.SetStreamStatus(
 		s.AccountsService,
 		s.CreatorsService,
