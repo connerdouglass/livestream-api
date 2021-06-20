@@ -7,13 +7,15 @@ import (
 	"time"
 
 	"github.com/godocompany/livestream-api/models"
+	"github.com/godocompany/livestream-api/sockets"
 	"github.com/godocompany/livestream-api/utils"
 	"gorm.io/gorm"
 )
 
 // StreamsService manages the streams in the system
 type StreamsService struct {
-	DB *gorm.DB
+	DB      *gorm.DB
+	Sockets sockets.Broadcaster
 }
 
 type CreateStreamOptions struct {
@@ -121,6 +123,10 @@ func (s *StreamsService) GenerateUnusedStreamKey() (string, error) {
 
 func (s *StreamsService) UpdateStreaming(stream *models.Stream, streaming bool) error {
 	stream.Streaming = streaming
+	if !streaming {
+		stream.Status = models.StreamStatus_Ended
+		s.socketsBroadcastStreamEnded(stream)
+	}
 	return s.DB.Save(stream).Error
 }
 
@@ -158,6 +164,9 @@ func (s *StreamsService) UpdateStatus(stream *models.Stream, status string) erro
 			Valid: true,
 			Time:  time.Now(),
 		}
+		s.socketsBroadcastStreamEnded(stream)
+	} else if status == models.StreamStatus_Live {
+		s.socketsBroadcastStreamStarted(stream)
 	}
 	return s.DB.Save(stream).Error
 
@@ -196,4 +205,12 @@ func (s *StreamsService) GetNextStreamForCreator(creator *models.CreatorProfile)
 		return nil, err
 	}
 	return &stream, nil
+}
+
+func (s *StreamsService) socketsBroadcastStreamEnded(stream *models.Stream) {
+	s.Sockets.BroadcastToRoom("/", fmt.Sprintf("stream_%s", stream.Identifier), "stream.ended")
+}
+
+func (s *StreamsService) socketsBroadcastStreamStarted(stream *models.Stream) {
+	s.Sockets.BroadcastToRoom("/", fmt.Sprintf("stream_%s", stream.Identifier), "stream.started")
 }

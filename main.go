@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
+	"github.com/godocompany/livestream-api/sockets"
 	v1 "github.com/godocompany/livestream-api/v1"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -54,6 +55,10 @@ func main() {
 	// Create all the service instances
 	//================================================================================
 
+	// Create the socket server
+	socket := sockets.NewServer()
+
+	// Create the rest of the services
 	accountsService := &services.AccountsService{DB: db}
 	authTokensService := &services.AuthTokensService{
 		DB:            db,
@@ -63,7 +68,10 @@ func main() {
 	rtmpAuthService := &services.RtmpAuthService{
 		RtmpServerPasscode: os.Getenv("RTMP_SERVER_PASSCODE"),
 	}
-	streamsService := &services.StreamsService{DB: db}
+	streamsService := &services.StreamsService{
+		DB:      db,
+		Sockets: socket.SocketSrv,
+	}
 
 	//================================================================================
 	// Setup the Gin HTTP router
@@ -79,6 +87,9 @@ func main() {
 	corsCfg.AddAllowHeaders("Accept", "User-Agent", "Authorization")
 	r.Use(cors.New(corsCfg))
 
+	// Mount the socket server
+	socket.Setup(r.Group("socket.io"))
+
 	// Create the API instance
 	api := &v1.Server{
 		AccountsService:   accountsService,
@@ -92,6 +103,7 @@ func main() {
 	api.Setup(r.Group("v1"))
 
 	// Run the server
+	go socket.Run()
 	if err := r.Run(); err != nil {
 		log.Panicln(err)
 	}
