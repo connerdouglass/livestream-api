@@ -4,17 +4,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
 	"github.com/godocompany/livestream-api/v1/utils"
 )
 
-type StudioSetStreamStatusReq struct {
-	CreatorID uint64 `json:"creator_id"`
-	StreamID  string `json:"stream_id"`
-	Status    string `json:"status"`
+type StudioGetStreamReq struct {
+	StreamID string `json:"stream_id"`
 }
 
-func StudioSetStreamStatus(
+func StudioGetStream(
 	accountsService *services.AccountsService,
 	creatorsService *services.CreatorsService,
 	streamsService *services.StreamsService,
@@ -22,7 +21,7 @@ func StudioSetStreamStatus(
 	return func(c *gin.Context) {
 
 		// Get the request body
-		var req StudioSetStreamStatusReq
+		var req StudioGetStreamReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -53,16 +52,25 @@ func StudioSetStreamStatus(
 			return
 		}
 
-		// Update the status of the stream
-		if err := streamsService.UpdateStatus(stream, req.Status); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
 		// Return an empty response
 		c.JSON(http.StatusOK, gin.H{
-			"data": gin.H{},
+			"data": serializeStreamForStudio(stream),
 		})
 
+	}
+}
+
+func serializeStreamForStudio(stream *models.Stream) map[string]interface{} {
+	if stream == nil {
+		return nil
+	}
+	return map[string]interface{}{
+		"id":                   stream.ID,
+		"identifier":           stream.Identifier,
+		"title":                stream.Title,
+		"stream_key":           stream.StreamKey,
+		"status":               stream.Status,
+		"streaming":            stream.Streaming,
+		"scheduled_start_date": stream.ScheduledStartDate.Unix(),
 	}
 }

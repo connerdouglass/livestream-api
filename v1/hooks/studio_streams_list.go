@@ -4,23 +4,22 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
 	"github.com/godocompany/livestream-api/v1/utils"
 )
 
-type ListStreamsReq struct {
+type StudioListStreamsReq struct {
 	CreatorID uint64 `json:"creator_id"`
 }
 
-func ListStreams(
+func StudioListStreams(
 	creatorsService *services.CreatorsService,
 	streamsService *services.StreamsService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get the request body
-		var req ListStreamsReq
+		var req StudioListStreamsReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -54,7 +53,7 @@ func ListStreams(
 		// Serialize all of the streams
 		streamsSer := make([]map[string]interface{}, len(streams))
 		for i := range streams {
-			streamsSer[i] = serializeStreamInList(streams[i])
+			streamsSer[i] = serializeStreamForStudio(streams[i])
 		}
 
 		// Respond with the streams
@@ -64,15 +63,5 @@ func ListStreams(
 			},
 		})
 
-	}
-}
-
-func serializeStreamInList(stream *models.Stream) map[string]interface{} {
-	if stream == nil {
-		return nil
-	}
-	return map[string]interface{}{
-		"id":    stream.ID,
-		"title": stream.Title,
 	}
 }

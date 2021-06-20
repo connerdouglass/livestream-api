@@ -73,6 +73,22 @@ func (s *StreamsService) GetAllStreamsForCreatorID(creatorID uint64) ([]*models.
 	return streams, nil
 }
 
+func (s *StreamsService) GetStreamByID(streamID uint64) (*models.Stream, error) {
+	var stream models.Stream
+	err := s.DB.
+		Where("id = ?", streamID).
+		Where("deleted_date IS NULL").
+		First(&stream).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &stream, nil
+}
+
 func (s *StreamsService) GetStreamByIdentifier(identifier string) (*models.Stream, error) {
 	var stream models.Stream
 	err := s.DB.
