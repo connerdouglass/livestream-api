@@ -9,9 +9,8 @@ import (
 )
 
 type StudioSetStreamStatusReq struct {
-	CreatorID uint64 `json:"creator_id"`
-	StreamID  string `json:"stream_id"`
-	Status    string `json:"status"`
+	StreamID string `json:"stream_id"`
+	Status   string `json:"status"`
 }
 
 func StudioSetStreamStatus(
