@@ -63,7 +63,7 @@ func (s *StreamsService) CreateStream(
 func (s *StreamsService) GetAllStreamsForCreatorID(creatorID uint64) ([]*models.Stream, error) {
 	var streams []*models.Stream
 	err := s.DB.
-		Where("creator_id = ?", creatorID).
+		Where("creator_profile_id = ?", creatorID).
 		Where("deleted_date IS NULL").
 		Find(&streams).
 		Error
