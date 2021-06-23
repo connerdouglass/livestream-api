@@ -201,6 +201,14 @@ func (s *StreamsService) UpdateStatus(stream *models.Stream, status string) erro
 
 }
 
+func (s *StreamsService) UpdateViewerCount(stream *models.Stream, count int) error {
+	return s.DB.
+		Model(&models.Stream{}).
+		Where("id = ?", stream.ID).
+		Update("current_viewers", count).
+		Error
+}
+
 // GetLiveStreamForCreator gets the stream that is currently live for a creator
 func (s *StreamsService) GetLiveStreamForCreator(creator *models.CreatorProfile) (*models.Stream, error) {
 	var stream models.Stream

@@ -74,5 +74,6 @@ func serializeStream(stream *models.Stream) map[string]interface{} {
 		"title":                stream.Title,
 		"status":               stream.Status,
 		"scheduled_start_date": stream.ScheduledStartDate.Unix(),
+		"current_viewers":      stream.CurrentViewers,
 	}
 }

@@ -139,6 +139,15 @@ func (s *SocketsService) OnStreamJoin(conn socketio.Conn, data StreamJoinMsg) er
 
 	fmt.Println("joined stream: ", stream.Identifier, conn.RemoteAddr().String())
 
+	// Update the viewer count
+	go s.StreamsService.UpdateViewerCount(
+		stream,
+		s.Server.RoomLen(
+			"/",
+			fmt.Sprintf("stream_%s", stream.Identifier),
+		),
+	)
+
 	return nil
 
 }
@@ -157,6 +166,15 @@ func (s *SocketsService) OnStreamLeave(conn socketio.Conn, data StreamJoinMsg) e
 	// Leave the room for the event
 	conn.Leave(
 		fmt.Sprintf("stream_%s", stream.Identifier),
+	)
+
+	// Update the viewer count
+	go s.StreamsService.UpdateViewerCount(
+		stream,
+		s.Server.RoomLen(
+			"/",
+			fmt.Sprintf("stream_%s", stream.Identifier),
+		),
 	)
 
 	fmt.Println("left stream: ", stream.Identifier, conn.RemoteAddr().String())
