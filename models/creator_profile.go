@@ -12,6 +12,7 @@ type CreatorProfile struct {
 	Account     *Account
 	Username    string
 	Name        string
+	Image       string
 	CreatedDate time.Time
 	DeletedDate sql.NullTime
 }

@@ -55,6 +55,7 @@ func GetCreatorMeta(
 				"id":          creator.ID,
 				"username":    creator.Username,
 				"name":        creator.Name,
+				"image":       creator.Image,
 				"live_stream": serializeStream(liveStream),
 				"next_stream": serializeStream(nextStream),
 			},
