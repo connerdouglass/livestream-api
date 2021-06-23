@@ -124,12 +124,13 @@ func main() {
 
 	// Create the API instance
 	api := &v1.Server{
-		AccountsService:   accountsService,
-		AuthTokensService: authTokensService,
-		CreatorsService:   creatorsService,
-		RtmpAuthService:   rtmpAuthService,
-		StreamsService:    streamsService,
-		TelegramService:   telegramService,
+		MainCreatorUsername: os.Getenv("MAIN_CREATOR_USERNAME"),
+		AccountsService:     accountsService,
+		AuthTokensService:   authTokensService,
+		CreatorsService:     creatorsService,
+		RtmpAuthService:     rtmpAuthService,
+		StreamsService:      streamsService,
+		TelegramService:     telegramService,
 	}
 
 	// Mount the API routes
