@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -56,7 +57,9 @@ func main() {
 	//================================================================================
 
 	// Create the socket server
-	socket := sockets.NewServer()
+	socket := sockets.NewServer(
+		GetAllowedOrigins(),
+	)
 
 	// Create the rest of the services
 	accountsService := &services.AccountsService{DB: db}
@@ -84,13 +87,8 @@ func main() {
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowOrigins = GetAllowedOrigins()
 	corsCfg.AllowCredentials = true
-	corsCfg.AllowWebSockets = true
 	corsCfg.AddAllowHeaders("Accept", "User-Agent", "Authorization")
 	r.Use(cors.New(corsCfg))
-
-	// Mount the socket server to the Gin router
-	socket.Setup()
-	r.GET("/socket.io", socket.Handler)
 
 	// Create the API instance
 	api := &v1.Server{
@@ -104,9 +102,13 @@ func main() {
 	// Mount the API routes
 	api.Setup(r.Group("v1"))
 
+	// Create a mux to serve both the HTTP and Socket.IO servers
+	mux := http.NewServeMux()
+	mux.Handle("/socket.io/", socket.SocketSrv)
+	mux.Handle("/", r)
+
 	// Run the server
-	go socket.Run()
-	if err := r.Run(); err != nil {
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Panicln(err)
 	}
 
