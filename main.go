@@ -12,8 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
-	"github.com/godocompany/livestream-api/sockets"
 	v1 "github.com/godocompany/livestream-api/v1"
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -53,15 +57,33 @@ func main() {
 	)
 
 	//================================================================================
+	// Setup the WebSockets server
+	//================================================================================
+
+	// Get all of the allowed origins
+	allowedOrigins := GetAllowedOrigins()
+
+	// Create the server
+	socketIoServer := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: checkOrigin(allowedOrigins),
+			},
+			&websocket.Transport{
+				CheckOrigin: checkOrigin(allowedOrigins),
+			},
+		},
+	})
+	go socketIoServer.Serve()
+
+	//================================================================================
 	// Create all the service instances
 	//================================================================================
 
-	// Create the socket server
-	socket := sockets.NewServer(
-		GetAllowedOrigins(),
-	)
-
 	// Create the rest of the services
+	socketsService := &services.SocketsService{
+		Server: socketIoServer,
+	}
 	accountsService := &services.AccountsService{DB: db}
 	authTokensService := &services.AuthTokensService{
 		DB:            db,
@@ -72,9 +94,14 @@ func main() {
 		RtmpServerPasscode: os.Getenv("RTMP_SERVER_PASSCODE"),
 	}
 	streamsService := &services.StreamsService{
-		DB:      db,
-		Sockets: socket.SocketSrv,
+		DB:             db,
+		SocketsService: socketsService,
 	}
+
+	// Do some final update on the sockets service
+	// Needed because it has a circular relationship with other services
+	socketsService.StreamsService = streamsService
+	socketsService.Setup()
 
 	//================================================================================
 	// Setup the Gin HTTP router
@@ -104,7 +131,7 @@ func main() {
 
 	// Create a mux to serve both the HTTP and Socket.IO servers
 	mux := http.NewServeMux()
-	mux.Handle("/socket.io/", socket.SocketSrv)
+	mux.Handle("/socket.io/", socketIoServer)
 	mux.Handle("/", r)
 
 	// Run the server
