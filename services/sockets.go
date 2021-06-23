@@ -151,8 +151,9 @@ func (s *SocketsService) OnStreamLeave(conn socketio.Conn, data StreamJoinMsg) e
 //====================================================================================================
 
 type ChatMsg struct {
-	StreamID string `json:"stream_id"`
-	Message  string `json:"message"`
+	StreamID string       `json:"stream_id"`
+	Message  string       `json:"message"`
+	User     TelegramUser `json:"user"`
 }
 
 func (s *SocketsService) OnChat(conn socketio.Conn, data ChatMsg) error {
@@ -166,10 +167,15 @@ func (s *SocketsService) OnChat(conn socketio.Conn, data ChatMsg) error {
 		return errors.New("stream not found")
 	}
 
-	// Get the telegram user from the context
-	ctx, ok := conn.Context().(SocketContext)
-	if !ok {
-		return errors.New("invalid context for socket connection")
+	// // Get the telegram user from the context
+	// ctx, ok := conn.Context().(SocketContext)
+	// if !ok {
+	// 	return errors.New("invalid context for socket connection")
+	// }
+
+	// Validate the telegram user
+	if !s.TelegramService.Verify(&data.User) {
+		return errors.New("invalid Telegram user hash")
 	}
 
 	// Broadcast the message to the room
@@ -177,8 +183,8 @@ func (s *SocketsService) OnChat(conn socketio.Conn, data ChatMsg) error {
 		fmt.Sprintf("stream_%s", stream.Identifier),
 		"chat.message",
 		map[string]interface{}{
-			"username":  ctx.User.Username,
-			"photo_url": ctx.User.PhotoUrl,
+			"username":  data.User.Username,
+			"photo_url": data.User.PhotoUrl,
 			"message":   data.Message,
 		},
 	)
