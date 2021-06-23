@@ -129,6 +129,7 @@ func main() {
 		CreatorsService:   creatorsService,
 		RtmpAuthService:   rtmpAuthService,
 		StreamsService:    streamsService,
+		TelegramService:   telegramService,
 	}
 
 	// Mount the API routes

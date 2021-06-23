@@ -14,6 +14,7 @@ type Server struct {
 	CreatorsService   *services.CreatorsService
 	RtmpAuthService   *services.RtmpAuthService
 	StreamsService    *services.StreamsService
+	TelegramService   *services.TelegramService
 }
 
 // Setup mounts the API server to the given group
@@ -37,6 +38,9 @@ func (s *Server) Setup(g *gin.RouterGroup) {
 func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 
 	// Register public API routes
+	g.POST("/app/get-state", hooks.AppState(
+		s.TelegramService,
+	))
 	g.POST("/auth/login", hooks.AuthLogin(
 		s.AccountsService,
 		s.AuthTokensService,
