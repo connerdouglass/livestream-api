@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/godocompany/livestream-api/models"
 	socketio "github.com/googollee/go-socket.io"
@@ -13,12 +14,17 @@ type SocketContext struct {
 }
 
 type SocketsService struct {
-	Server          *socketio.Server
-	StreamsService  *StreamsService
-	TelegramService *TelegramService
+	Server               *socketio.Server
+	StreamsService       *StreamsService
+	TelegramService      *TelegramService
+	streamChatBuffers    map[uint64]*LiveChatMessageBuffer
+	streamChatBuffersMut sync.Mutex
 }
 
 func (s *SocketsService) Setup() {
+
+	// Create the buffer
+	s.streamChatBuffers = map[uint64]*LiveChatMessageBuffer{}
 
 	// Add handlers to the socket server
 	s.Server.OnConnect("/", func(conn socketio.Conn) error {
@@ -117,6 +123,20 @@ func (s *SocketsService) OnStreamJoin(conn socketio.Conn, data StreamJoinMsg) er
 		fmt.Sprintf("stream_%s", stream.Identifier),
 	)
 
+	// Emit all the buffered messages to the new viewer, so they don't open the page to
+	// a completely empty live chat screen
+	bufMsgs := s.copyChatMsgBuffer(stream.ID)
+	for _, msg := range bufMsgs {
+		conn.Emit(
+			"chat.message",
+			map[string]interface{}{
+				"username":  msg.User.Username,
+				"photo_url": msg.User.PhotoUrl,
+				"message":   msg.Message,
+			},
+		)
+	}
+
 	fmt.Println("joined stream: ", stream.Identifier, conn.RemoteAddr().String())
 
 	return nil
@@ -190,6 +210,50 @@ func (s *SocketsService) OnChat(conn socketio.Conn, data ChatMsg) error {
 		},
 	)
 
+	// Push the chat message to the buffer
+	// Do it in a goroutine because we don't care about the result and we don't want to block
+	// the socket handler just to do this task
+	go s.pushChatMsgToBuffer(stream.ID, &data)
+
 	return nil
+
+}
+
+func (s *SocketsService) pushChatMsgToBuffer(streamID uint64, msg *ChatMsg) {
+
+	// Lock on the buffers
+	s.streamChatBuffersMut.Lock()
+
+	// Get the buffer for this stream identifier
+	buf, ok := s.streamChatBuffers[streamID]
+	if !ok {
+		buf = &LiveChatMessageBuffer{
+			MaxLength: 10,
+		}
+		s.streamChatBuffers[streamID] = buf
+	}
+
+	// Unlock the buffer mutex since we have a pointer to what we need now
+	s.streamChatBuffersMut.Unlock()
+
+	// Push the message
+	buf.Push(msg)
+
+}
+
+func (s *SocketsService) copyChatMsgBuffer(streamID uint64) []*ChatMsg {
+
+	// Lock on the buffers
+	s.streamChatBuffersMut.Lock()
+
+	// Get the buffer for this stream identifier
+	buf, ok := s.streamChatBuffers[streamID]
+	s.streamChatBuffersMut.Unlock()
+	if !ok {
+		return nil
+	}
+
+	// Copy the values from the buffer
+	return buf.GetCopy()
 
 }
