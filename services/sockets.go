@@ -3,11 +3,14 @@ package services
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/godocompany/livestream-api/models"
 	socketio "github.com/googollee/go-socket.io"
 )
+
+type SocketContext struct {
+	User *TelegramUser
+}
 
 type SocketsService struct {
 	Server          *socketio.Server
@@ -20,6 +23,7 @@ func (s *SocketsService) Setup() {
 	// Add handlers to the socket server
 	s.Server.OnConnect("/", func(conn socketio.Conn) error {
 		fmt.Println("client connected: ", conn.RemoteAddr().String())
+		conn.SetContext(SocketContext{})
 		return nil
 	})
 
@@ -31,6 +35,8 @@ func (s *SocketsService) Setup() {
 	// Register all of the event handlers
 	s.Server.OnEvent("/", "stream.join", s.OnStreamJoin)
 	s.Server.OnEvent("/", "stream.leave", s.OnStreamLeave)
+	s.Server.OnEvent("/", "telegram.auth", s.OnTelegramAuth)
+	s.Server.OnEvent("/", "chat.message", s.OnChat)
 
 }
 
@@ -53,6 +59,37 @@ func (s *SocketsService) StreamStarted(stream *models.Stream) {
 		fmt.Sprintf("stream_%s", stream.Identifier),
 		"stream.started",
 	)
+}
+
+//====================================================================================================
+// telegram.auth event handler
+// Called when a user signs in with Telegram auth
+//====================================================================================================
+
+type TelegramAuthMsg struct {
+	User TelegramUser `json:"user"`
+}
+
+func (s *SocketsService) OnTelegramAuth(conn socketio.Conn, data TelegramAuthMsg) error {
+
+	// Get the context for the socket
+	ctx, ok := conn.Context().(SocketContext)
+	if !ok {
+		return errors.New("invalid context for socket connection")
+	}
+
+	// Validate the user
+	if !s.TelegramService.Verify(&data.User) {
+		fmt.Println("Telegram user hash doesn't match!")
+		return errors.New("invalid telegram user hash")
+	}
+
+	// Set the context
+	ctx.User = &data.User
+
+	// Return without error
+	return nil
+
 }
 
 //====================================================================================================
@@ -81,20 +118,6 @@ func (s *SocketsService) OnStreamJoin(conn socketio.Conn, data StreamJoinMsg) er
 	)
 
 	fmt.Println("joined stream: ", stream.Identifier, conn.RemoteAddr().String())
-
-	go func() {
-		for i := 0; i < 10; i++ {
-			<-time.After(2 * time.Second)
-			s.Broadcast(
-				fmt.Sprintf("stream_%s", stream.Identifier),
-				"chat.message",
-				map[string]interface{}{
-					"username": "guest_auto",
-					"message":  "This is a great live stream!",
-				},
-			)
-		}
-	}()
 
 	return nil
 
@@ -143,16 +166,20 @@ func (s *SocketsService) OnChat(conn socketio.Conn, data ChatMsg) error {
 		return errors.New("stream not found")
 	}
 
-	// Get the name of the visitor
-	// ...
+	// Get the telegram user from the context
+	ctx, ok := conn.Context().(SocketContext)
+	if !ok {
+		return errors.New("invalid context for socket connection")
+	}
 
 	// Broadcast the message to the room
 	s.Broadcast(
 		fmt.Sprintf("stream_%s", stream.Identifier),
 		"chat.message",
 		map[string]interface{}{
-			"username": "guest",
-			"message":  data.Message,
+			"username":  ctx.User.Username,
+			"photo_url": ctx.User.PhotoUrl,
+			"message":   data.Message,
 		},
 	)
 
