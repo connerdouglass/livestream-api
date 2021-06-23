@@ -10,8 +10,9 @@ import (
 )
 
 type SocketsService struct {
-	Server         *socketio.Server
-	StreamsService *StreamsService
+	Server          *socketio.Server
+	StreamsService  *StreamsService
+	TelegramService *TelegramService
 }
 
 func (s *SocketsService) Setup() {

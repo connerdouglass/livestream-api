@@ -81,8 +81,13 @@ func main() {
 	//================================================================================
 
 	// Create the rest of the services
+	telegramService := &services.TelegramService{
+		BotAPIKey:   os.Getenv("TELEGRAM_BOT_API_KEY"),
+		BotUsername: os.Getenv("TELEGRAM_BOT_USERNAME"),
+	}
 	socketsService := &services.SocketsService{
-		Server: socketIoServer,
+		Server:          socketIoServer,
+		TelegramService: telegramService,
 	}
 	accountsService := &services.AccountsService{DB: db}
 	authTokensService := &services.AuthTokensService{

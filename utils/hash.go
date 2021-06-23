@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 )
@@ -14,4 +15,10 @@ func Sha256Hex(input string) string {
 	// Encode it as a hex string and return
 	return hex.EncodeToString(hashBytes[:])
 
+}
+
+func HmacSha256(input, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	sum := h.Sum([]byte(input))
+	return hex.EncodeToString(sum)
 }
