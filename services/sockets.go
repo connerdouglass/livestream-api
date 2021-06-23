@@ -36,6 +36,7 @@ func (s *SocketsService) Setup() {
 	// When a socket disconnects
 	s.Server.OnDisconnect("/", func(conn socketio.Conn, reason string) {
 		fmt.Println("client disconnected: ", conn.RemoteAddr().String())
+		conn.LeaveAll()
 	})
 
 	// Register all of the event handlers
