@@ -16,6 +16,7 @@ type Server struct {
 	RtmpAuthService     *services.RtmpAuthService
 	StreamsService      *services.StreamsService
 	TelegramService     *services.TelegramService
+	ChatService         *services.ChatService
 }
 
 // Setup mounts the API server to the given group
@@ -103,6 +104,10 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 	g.POST("/studio/streams/list", hooks.StudioListStreams(
 		s.CreatorsService,
 		s.StreamsService,
+	))
+	g.POST("/studio/chat/mute", hooks.StudioChatMute(
+		s.AccountsService,
+		s.ChatService,
 	))
 
 }

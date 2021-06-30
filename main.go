@@ -53,6 +53,9 @@ func main() {
 
 	// Migrate the schema
 	db.AutoMigrate(
+		&models.Account{},
+		&models.CreatorProfile{},
+		&models.MutedUser{},
 		&models.Stream{},
 	)
 
@@ -102,6 +105,9 @@ func main() {
 		DB:             db,
 		SocketsService: socketsService,
 	}
+	chatService := &services.ChatService{
+		DB: db,
+	}
 
 	// Do some final update on the sockets service
 	// Needed because it has a circular relationship with other services
@@ -131,6 +137,7 @@ func main() {
 		RtmpAuthService:     rtmpAuthService,
 		StreamsService:      streamsService,
 		TelegramService:     telegramService,
+		ChatService:         chatService,
 	}
 
 	// Mount the API routes
