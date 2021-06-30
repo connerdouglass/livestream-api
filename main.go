@@ -88,9 +88,13 @@ func main() {
 		BotAPIKey:   os.Getenv("TELEGRAM_BOT_API_KEY"),
 		BotUsername: os.Getenv("TELEGRAM_BOT_USERNAME"),
 	}
+	chatService := &services.ChatService{
+		DB: db,
+	}
 	socketsService := &services.SocketsService{
 		Server:          socketIoServer,
 		TelegramService: telegramService,
+		ChatService:     chatService,
 	}
 	accountsService := &services.AccountsService{DB: db}
 	authTokensService := &services.AuthTokensService{
@@ -104,9 +108,6 @@ func main() {
 	streamsService := &services.StreamsService{
 		DB:             db,
 		SocketsService: socketsService,
-	}
-	chatService := &services.ChatService{
-		DB: db,
 	}
 
 	// Do some final update on the sockets service

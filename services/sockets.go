@@ -17,6 +17,7 @@ type SocketsService struct {
 	Server               *socketio.Server
 	StreamsService       *StreamsService
 	TelegramService      *TelegramService
+	ChatService          *ChatService
 	streamChatBuffers    map[uint64]*LiveChatMessageBuffer
 	streamChatBuffersMut sync.Mutex
 }
@@ -216,6 +217,15 @@ func (s *SocketsService) OnChat(conn socketio.Conn, data ChatMsg) error {
 	if !s.TelegramService.Verify(&data.User) {
 		fmt.Println("Verification failed!")
 		// return errors.New("invalid Telegram user hash")
+	}
+
+	// Check if the user is muted in chat
+	muted, err := s.ChatService.IsUserMuted(data.User.Username)
+	if err != nil {
+		return err
+	}
+	if muted {
+		return errors.New("user is muted in chat")
 	}
 
 	// Broadcast the message to the room
