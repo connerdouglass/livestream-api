@@ -27,6 +27,15 @@ func (s *ChatService) MuteUser( /*creatorID uint64,*/ username string) (*models.
 
 }
 
+func (s *ChatService) UnmuteUser( /*creatorID uint64,*/ username string) error {
+	return s.DB.
+		Model(&models.MutedUser{}).
+		Where("deleted_date IS NULL").
+		Where("username LIKE ?", username).
+		Update("deleted_date", time.Now()).
+		Error
+}
+
 func (s *ChatService) IsUserMuted( /* creatorID uint64,*/ username string) (bool, error) {
 	var mutedUser models.MutedUser
 	err := s.DB.

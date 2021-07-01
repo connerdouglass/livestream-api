@@ -109,5 +109,9 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 		s.AccountsService,
 		s.ChatService,
 	))
+	g.POST("/studio/chat/unmute", hooks.StudioChatUnmute(
+		s.AccountsService,
+		s.ChatService,
+	))
 
 }
