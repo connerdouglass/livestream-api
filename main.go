@@ -13,11 +13,6 @@ import (
 	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
 	v1 "github.com/godocompany/livestream-api/v1"
-	socketio "github.com/googollee/go-socket.io"
-	"github.com/googollee/go-socket.io/engineio"
-	"github.com/googollee/go-socket.io/engineio/transport"
-	"github.com/googollee/go-socket.io/engineio/transport/polling"
-	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -55,29 +50,8 @@ func main() {
 	db.AutoMigrate(
 		&models.Account{},
 		&models.CreatorProfile{},
-		&models.MutedUser{},
 		&models.Stream{},
 	)
-
-	//================================================================================
-	// Setup the WebSockets server
-	//================================================================================
-
-	// Get all of the allowed origins
-	allowedOrigins := GetAllowedOrigins()
-
-	// Create the server
-	socketIoServer := socketio.NewServer(&engineio.Options{
-		Transports: []transport.Transport{
-			&polling.Transport{
-				CheckOrigin: checkOrigin(allowedOrigins),
-			},
-			&websocket.Transport{
-				CheckOrigin: checkOrigin(allowedOrigins),
-			},
-		},
-	})
-	go socketIoServer.Serve()
 
 	//================================================================================
 	// Create all the service instances
@@ -88,14 +62,6 @@ func main() {
 		BotAPIKey:   os.Getenv("TELEGRAM_BOT_API_KEY"),
 		BotUsername: os.Getenv("TELEGRAM_BOT_USERNAME"),
 	}
-	chatService := &services.ChatService{
-		DB: db,
-	}
-	socketsService := &services.SocketsService{
-		Server:          socketIoServer,
-		TelegramService: telegramService,
-		ChatService:     chatService,
-	}
 	accountsService := &services.AccountsService{DB: db}
 	authTokensService := &services.AuthTokensService{
 		DB:            db,
@@ -105,15 +71,7 @@ func main() {
 	rtmpAuthService := &services.RtmpAuthService{
 		RtmpServerPasscode: os.Getenv("RTMP_SERVER_PASSCODE"),
 	}
-	streamsService := &services.StreamsService{
-		DB:             db,
-		SocketsService: socketsService,
-	}
-
-	// Do some final update on the sockets service
-	// Needed because it has a circular relationship with other services
-	socketsService.StreamsService = streamsService
-	socketsService.Setup()
+	streamsService := &services.StreamsService{DB: db}
 
 	//================================================================================
 	// Setup the Gin HTTP router
@@ -138,7 +96,6 @@ func main() {
 		RtmpAuthService:     rtmpAuthService,
 		StreamsService:      streamsService,
 		TelegramService:     telegramService,
-		ChatService:         chatService,
 	}
 
 	// Mount the API routes
@@ -146,7 +103,6 @@ func main() {
 
 	// Create a mux to serve both the HTTP and Socket.IO servers
 	mux := http.NewServeMux()
-	mux.Handle("/socket.io/", socketIoServer)
 	mux.Handle("/", r)
 
 	// Run the server

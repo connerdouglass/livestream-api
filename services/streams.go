@@ -13,8 +13,7 @@ import (
 
 // StreamsService manages the streams in the system
 type StreamsService struct {
-	DB             *gorm.DB
-	SocketsService *SocketsService
+	DB *gorm.DB
 }
 
 type CreateStreamOptions struct {
@@ -154,7 +153,6 @@ func (s *StreamsService) UpdateStreaming(stream *models.Stream, streaming bool) 
 	stream.Streaming = streaming
 	if !streaming {
 		stream.Status = models.StreamStatus_Ended
-		s.SocketsService.StreamEnded(stream)
 	}
 	return s.DB.Save(stream).Error
 }
@@ -193,9 +191,6 @@ func (s *StreamsService) UpdateStatus(stream *models.Stream, status string) erro
 			Valid: true,
 			Time:  time.Now(),
 		}
-		s.SocketsService.StreamEnded(stream)
-	} else if status == models.StreamStatus_Live {
-		s.SocketsService.StreamStarted(stream)
 	}
 	return s.DB.Save(stream).Error
 
