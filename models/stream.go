@@ -23,6 +23,7 @@ type Stream struct {
 	Status             string
 	Streaming          bool
 	ScheduledStartDate time.Time
+	ChatRoomUrl        sql.NullString
 	CurrentViewers     int
 	EndedDate          sql.NullTime
 	CreatedDate        time.Time

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
+	"github.com/godocompany/livestream-api/utils"
 )
 
 type GetCreatorMetaReq struct {
@@ -75,5 +76,6 @@ func serializeStream(stream *models.Stream) map[string]interface{} {
 		"status":               stream.Status,
 		"scheduled_start_date": stream.ScheduledStartDate.Unix(),
 		"current_viewers":      stream.CurrentViewers,
+		"chatroom_url":         utils.FlattenNullString(stream.ChatRoomUrl),
 	}
 }
