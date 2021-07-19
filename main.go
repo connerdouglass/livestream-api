@@ -49,6 +49,7 @@ func main() {
 	// Migrate the schema
 	db.AutoMigrate(
 		&models.Account{},
+		&models.CreatorProfileMember{},
 		&models.CreatorProfile{},
 		&models.Stream{},
 	)
@@ -72,6 +73,7 @@ func main() {
 		RtmpServerPasscode: os.Getenv("RTMP_SERVER_PASSCODE"),
 	}
 	streamsService := &services.StreamsService{DB: db}
+	membershipService := &services.MembershipService{DB: db}
 
 	//================================================================================
 	// Setup the Gin HTTP router
@@ -93,6 +95,7 @@ func main() {
 		AccountsService:     accountsService,
 		AuthTokensService:   authTokensService,
 		CreatorsService:     creatorsService,
+		MembershipService:   membershipService,
 		RtmpAuthService:     rtmpAuthService,
 		StreamsService:      streamsService,
 		TelegramService:     telegramService,

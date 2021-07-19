@@ -12,6 +12,7 @@ type Server struct {
 	MainCreatorUsername string
 	AccountsService     *services.AccountsService
 	AuthTokensService   *services.AuthTokensService
+	MembershipService   *services.MembershipService
 	CreatorsService     *services.CreatorsService
 	RtmpAuthService     *services.RtmpAuthService
 	StreamsService      *services.StreamsService
@@ -85,24 +86,34 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 		s.AuthTokensService,
 		s.CreatorsService,
 	))
-	g.POST("/studio/stream/set-status", hooks.StudioSetStreamStatus(
+	g.POST("/studio/members/add", hooks.StudioAddMember(
 		s.AccountsService,
 		s.CreatorsService,
+		s.MembershipService,
+	))
+	g.POST("/studio/members/list", hooks.StudioListMembers(
+		s.CreatorsService,
+		s.MembershipService,
+	))
+	g.POST("/studio/stream/set-status", hooks.StudioSetStreamStatus(
+		s.CreatorsService,
 		s.StreamsService,
+		s.MembershipService,
 	))
 	g.POST("/studio/stream/get", hooks.StudioGetStream(
-		s.AccountsService,
 		s.CreatorsService,
 		s.StreamsService,
+		s.MembershipService,
 	))
 	g.POST("/studio/stream/create", hooks.StudioCreateStream(
-		s.AccountsService,
 		s.CreatorsService,
 		s.StreamsService,
+		s.MembershipService,
 	))
 	g.POST("/studio/streams/list", hooks.StudioListStreams(
 		s.CreatorsService,
 		s.StreamsService,
+		s.MembershipService,
 	))
 
 }

@@ -18,9 +18,9 @@ type StudioCreateStreamReq struct {
 }
 
 func StudioCreateStream(
-	accountsService *services.AccountsService,
 	creatorsService *services.CreatorsService,
 	streamsService *services.StreamsService,
+	membershipService *services.MembershipService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -30,9 +30,6 @@ func StudioCreateStream(
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
-		// Get the account from the context
-		account := utils.CtxGetAccount(c)
 
 		// Get the creator profile with the identifier
 		creator, err := creatorsService.GetCreatorByID(req.CreatorID)
@@ -44,7 +41,17 @@ func StudioCreateStream(
 			c.JSON(http.StatusBadRequest, gin.H{"error": "creator not found"})
 			return
 		}
-		if creator.AccountID != account.ID {
+
+		// Get the account from the context
+		account := utils.CtxGetAccount(c)
+
+		// Check if the account has access
+		access, err := membershipService.IsMember(creator.ID, account.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !access {
 			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
 			return
 		}

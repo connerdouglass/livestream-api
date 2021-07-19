@@ -16,6 +16,23 @@ type AccountsService struct {
 func (s *AccountsService) FindByLogin(email, password string) (*models.Account, error) {
 
 	// Find the account with the email
+	account, err := s.GetByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify the password
+	if !account.VerifyPassword(password) {
+		return nil, nil
+	}
+
+	// Return the account
+	return account, nil
+
+}
+
+// GetByEmail gets the account with the provided email address
+func (s *AccountsService) GetByEmail(email string) (*models.Account, error) {
 	var account models.Account
 	err := s.DB.
 		Where("email LIKE ?", email).
@@ -27,38 +44,5 @@ func (s *AccountsService) FindByLogin(email, password string) (*models.Account, 
 		}
 		return nil, err
 	}
-
-	// Verify the password
-	if !account.VerifyPassword(password) {
-		return nil, nil
-	}
-
-	// Return the account
 	return &account, nil
-
-}
-
-// DoesAccountOwnStream checks if the given account owns the given stream
-func (s *AccountsService) DoesAccountOwnStream(account *models.Account, stream *models.Stream) (bool, error) {
-
-	// If either one is nil, return false
-	if account == nil || stream == nil {
-		return false, nil
-	}
-
-	// Check if we own a creator that owns the stream
-	var creator models.CreatorProfile
-	err := s.DB.
-		Where("id = ?", stream.CreatorProfileID).
-		Where("account_id = ?", account.ID).
-		First(&creator).
-		Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil
-		}
-		return false, nil
-	}
-	return true, nil
-
 }

@@ -8,19 +8,20 @@ import (
 	"github.com/godocompany/livestream-api/v1/utils"
 )
 
-type StudioListStreamsReq struct {
+type StudioAddMemberReq struct {
 	CreatorID uint64 `json:"creator_id"`
+	Email     string `json:"email"`
 }
 
-func StudioListStreams(
+func StudioAddMember(
+	accountsService *services.AccountsService,
 	creatorsService *services.CreatorsService,
-	streamsService *services.StreamsService,
 	membershipService *services.MembershipService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get the request body
-		var req StudioListStreamsReq
+		var req StudioAddMemberReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -51,24 +52,26 @@ func StudioListStreams(
 			return
 		}
 
-		// Get all of the streams for the creator
-		streams, err := streamsService.GetAllStreamsForCreatorID(creator.ID)
+		// Find the target account with the email address
+		targetAccount, err := accountsService.GetByEmail(req.Email)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-
-		// Serialize all of the streams
-		streamsSer := make([]map[string]interface{}, len(streams))
-		for i := range streams {
-			streamsSer[i] = serializeStreamForStudio(streams[i])
+		if targetAccount == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "target account not found"})
+			return
 		}
 
-		// Respond with the streams
+		// Create the membership
+		if err := membershipService.AddMember(creator.ID, targetAccount.ID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Return an empty response
 		c.JSON(http.StatusOK, gin.H{
-			"data": gin.H{
-				"streams": streamsSer,
-			},
+			"data": gin.H{},
 		})
 
 	}

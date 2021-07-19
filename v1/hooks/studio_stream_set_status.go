@@ -14,9 +14,9 @@ type StudioSetStreamStatusReq struct {
 }
 
 func StudioSetStreamStatus(
-	accountsService *services.AccountsService,
 	creatorsService *services.CreatorsService,
 	streamsService *services.StreamsService,
+	membershipService *services.MembershipService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -42,12 +42,12 @@ func StudioSetStreamStatus(
 		}
 
 		// Check if the account owns the stream
-		owns, err := accountsService.DoesAccountOwnStream(account, stream)
+		isMember, err := membershipService.IsMember(stream.CreatorProfileID, account.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		if !owns {
+		if !isMember {
 			c.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
 			return
 		}

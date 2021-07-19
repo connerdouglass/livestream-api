@@ -8,8 +8,6 @@ import (
 // CreatorProfile is a profile on the platform
 type CreatorProfile struct {
 	ID          uint64 `gorm:"primaryKey"`
-	AccountID   uint64
-	Account     *Account
 	Username    string
 	Name        string
 	Image       string

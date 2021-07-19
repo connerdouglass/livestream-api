@@ -8,19 +8,18 @@ import (
 	"github.com/godocompany/livestream-api/v1/utils"
 )
 
-type StudioListStreamsReq struct {
+type StudioListMembersReq struct {
 	CreatorID uint64 `json:"creator_id"`
 }
 
-func StudioListStreams(
+func StudioListMembers(
 	creatorsService *services.CreatorsService,
-	streamsService *services.StreamsService,
 	membershipService *services.MembershipService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get the request body
-		var req StudioListStreamsReq
+		var req StudioListMembersReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -51,24 +50,28 @@ func StudioListStreams(
 			return
 		}
 
-		// Get all of the streams for the creator
-		streams, err := streamsService.GetAllStreamsForCreatorID(creator.ID)
+		// Get all of the memberships
+		members, err := membershipService.GetMembers(creator.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Serialize all of the streams
-		streamsSer := make([]map[string]interface{}, len(streams))
-		for i := range streams {
-			streamsSer[i] = serializeStreamForStudio(streams[i])
+		// Serialize all of the members
+		membersSer := make([]map[string]interface{}, len(members))
+		for i, m := range members {
+			membersSer[i] = map[string]interface{}{
+				"id": m.ID,
+				"account": map[string]interface{}{
+					"id":    m.Account.ID,
+					"email": m.Account.Email,
+				},
+			}
 		}
 
-		// Respond with the streams
+		// Return an empty response
 		c.JSON(http.StatusOK, gin.H{
-			"data": gin.H{
-				"streams": streamsSer,
-			},
+			"data": gin.H{},
 		})
 
 	}
