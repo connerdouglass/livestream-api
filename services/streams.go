@@ -92,6 +92,7 @@ func (s *StreamsService) GetStreamByIdentifier(identifier string) (*models.Strea
 	err := s.DB.
 		Where("identifier = ?", identifier).
 		Where("deleted_date IS NULL").
+		Preload("CreatorProfile").
 		First(&stream).
 		Error
 	if err != nil {

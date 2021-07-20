@@ -61,8 +61,8 @@ func (s *NotificationsService) GetVapidKeyPair() (*VapidKeyPair, error) {
 
 	// Return the keypair object
 	return &VapidKeyPair{
-		PublicKey:  config.VapidPublicKey.String,
-		PrivateKey: config.VapidPrivateKey.String,
+		PublicKey:  publicKey,
+		PrivateKey: privateKey,
 	}, nil
 
 }
@@ -71,6 +71,23 @@ func (s *NotificationsService) Subscribe(
 	creatorID uint64,
 	registrationData string,
 ) error {
+
+	// Check if there is already a subscription
+	var count int64
+	err := s.DB.
+		Model(&models.NotificationSubscriber{}).
+		Where("deleted_date IS NULL").
+		Where("registration_data = ?", registrationData).
+		Count(&count).
+		Error
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	// Create the subscription
 	sub := models.NotificationSubscriber{
 		CreatorProfileID: creatorID,
 		RegistrationData: sql.NullString{
@@ -80,6 +97,7 @@ func (s *NotificationsService) Subscribe(
 		CreatedDate: time.Now(),
 	}
 	return s.DB.Create(&sub).Error
+
 }
 
 type BrowserNotification struct {
@@ -90,8 +108,8 @@ type BrowserNotification struct {
 func (s *NotificationsService) SendBrowserNotification(options *BrowserNotification) error {
 
 	// Decode subscription
-	sub := &webpush.Subscription{}
-	if err := json.Unmarshal([]byte(options.RegistrationData), s); err != nil {
+	sub := webpush.Subscription{}
+	if err := json.Unmarshal([]byte(options.RegistrationData), &sub); err != nil {
 		return err
 	}
 
@@ -102,7 +120,7 @@ func (s *NotificationsService) SendBrowserNotification(options *BrowserNotificat
 	}
 
 	// Send the browser push notification
-	resp, err := webpush.SendNotification(options.Message, sub, &webpush.Options{
+	resp, err := webpush.SendNotification(options.Message, &sub, &webpush.Options{
 		// Subscriber:      "example@example.com",
 		VAPIDPublicKey:  keypair.PublicKey,
 		VAPIDPrivateKey: keypair.PrivateKey,
@@ -120,12 +138,22 @@ func (s *NotificationsService) SendBrowserNotification(options *BrowserNotificat
 
 func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 	creatorID uint64,
-	message []byte,
+	title string,
+	body string,
 ) error {
+
+	// Format the title and body as JSON
+	message, err := json.Marshal(map[string]string{
+		"title": title,
+		"body":  body,
+	})
+	if err != nil {
+		return err
+	}
 
 	// Get all of the recipients
 	var subscribers []*models.NotificationSubscriber
-	err := s.DB.
+	err = s.DB.
 		Where("deleted_date IS NULL").
 		Where("creator_profile_id = ?", creatorID).
 		Find(&subscribers).
@@ -168,7 +196,7 @@ func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 	}
 
 	// Wait for all the notifications to finish
-	wg.Done()
+	wg.Wait()
 
 	// Return without error
 	return nil

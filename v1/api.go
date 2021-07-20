@@ -102,9 +102,9 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 		s.MembershipService,
 	))
 	g.POST("/studio/stream/set-status", hooks.StudioSetStreamStatus(
-		s.CreatorsService,
 		s.StreamsService,
 		s.MembershipService,
+		s.NotificationsService,
 	))
 	g.POST("/studio/stream/get", hooks.StudioGetStream(
 		s.CreatorsService,

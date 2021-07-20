@@ -1,9 +1,11 @@
 package hooks
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/services"
 	"github.com/godocompany/livestream-api/v1/utils"
 )
@@ -14,9 +16,9 @@ type StudioSetStreamStatusReq struct {
 }
 
 func StudioSetStreamStatus(
-	creatorsService *services.CreatorsService,
 	streamsService *services.StreamsService,
 	membershipService *services.MembershipService,
+	notificationsService *services.NotificationsService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -56,6 +58,18 @@ func StudioSetStreamStatus(
 		if err := streamsService.UpdateStatus(stream, req.Status); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+
+		// If we're going live
+		if req.Status == models.StreamStatus_Live {
+			err := notificationsService.SendNotificationToCreatorSubscribers(
+				stream.CreatorProfileID,
+				stream.CreatorProfile.Name,
+				"Stream has started!",
+			)
+			if err != nil {
+				fmt.Println("Error sending notifications: ", err)
+			}
 		}
 
 		// Return an empty response
