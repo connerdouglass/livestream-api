@@ -51,6 +51,8 @@ func main() {
 		&models.Account{},
 		&models.CreatorProfileMember{},
 		&models.CreatorProfile{},
+		&models.NotificationSubscriber{},
+		&models.SiteConfig{},
 		&models.Stream{},
 	)
 
@@ -59,6 +61,7 @@ func main() {
 	//================================================================================
 
 	// Create the rest of the services
+	siteConfigService := &services.SiteConfigService{DB: db}
 	telegramService := &services.TelegramService{
 		BotAPIKey:   os.Getenv("TELEGRAM_BOT_API_KEY"),
 		BotUsername: os.Getenv("TELEGRAM_BOT_USERNAME"),
@@ -74,6 +77,10 @@ func main() {
 	}
 	streamsService := &services.StreamsService{DB: db}
 	membershipService := &services.MembershipService{DB: db}
+	notificationsService := &services.NotificationsService{
+		DB:                db,
+		SiteConfigService: siteConfigService,
+	}
 
 	//================================================================================
 	// Setup the Gin HTTP router
@@ -91,14 +98,16 @@ func main() {
 
 	// Create the API instance
 	api := &v1.Server{
-		MainCreatorUsername: os.Getenv("MAIN_CREATOR_USERNAME"),
-		AccountsService:     accountsService,
-		AuthTokensService:   authTokensService,
-		CreatorsService:     creatorsService,
-		MembershipService:   membershipService,
-		RtmpAuthService:     rtmpAuthService,
-		StreamsService:      streamsService,
-		TelegramService:     telegramService,
+		MainCreatorUsername:  os.Getenv("MAIN_CREATOR_USERNAME"),
+		SiteConfigService:    siteConfigService,
+		AccountsService:      accountsService,
+		AuthTokensService:    authTokensService,
+		CreatorsService:      creatorsService,
+		MembershipService:    membershipService,
+		RtmpAuthService:      rtmpAuthService,
+		StreamsService:       streamsService,
+		TelegramService:      telegramService,
+		NotificationsService: notificationsService,
 	}
 
 	// Mount the API routes
