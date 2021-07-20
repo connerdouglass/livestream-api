@@ -15,7 +15,7 @@ type AuthLoginReq struct {
 func AuthLogin(
 	accountsService *services.AccountsService,
 	authTokensService *services.AuthTokensService,
-	creatorsService *services.CreatorsService,
+	membershipService *services.MembershipService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -44,7 +44,7 @@ func AuthLogin(
 		whoami, err := serializeWhoAmI(
 			account,
 			authTokensService,
-			creatorsService,
+			membershipService,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

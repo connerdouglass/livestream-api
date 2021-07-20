@@ -77,17 +77,3 @@ func (s *CreatorsService) ValidateUsername(username string) bool {
 	pattern := regexp.MustCompile(`^\w+$`)
 	return pattern.MatchString(username)
 }
-
-// GetCreatorsByAccountID gets all the creator profiles belonging to an account
-func (s *CreatorsService) GetCreatorsByAccountID(accountID uint64) ([]*models.CreatorProfile, error) {
-	var creators []*models.CreatorProfile
-	err := s.DB.
-		Where("account_id = ?", accountID).
-		Where("deleted_date IS NULL").
-		Find(&creators).
-		Error
-	if err != nil {
-		return nil, err
-	}
-	return creators, nil
-}

@@ -50,7 +50,7 @@ func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 	g.POST("/auth/login", hooks.AuthLogin(
 		s.AccountsService,
 		s.AuthTokensService,
-		s.CreatorsService,
+		s.MembershipService,
 	))
 	g.POST("/creator/get-meta", hooks.GetCreatorMeta(
 		s.CreatorsService,
@@ -90,7 +90,7 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 	// Register authenticated API routes
 	g.POST("/auth/whoami", hooks.AuthWhoAmI(
 		s.AuthTokensService,
-		s.CreatorsService,
+		s.MembershipService,
 	))
 	g.POST("/studio/members/add", hooks.StudioAddMember(
 		s.AccountsService,

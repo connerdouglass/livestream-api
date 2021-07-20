@@ -61,6 +61,7 @@ func (s *MembershipService) GetCreatorProfiles(accountID uint64) ([]*models.Crea
 func (s *MembershipService) IsMember(creatorID, accountID uint64) (bool, error) {
 	var count int64
 	err := s.DB.
+		Model(&models.CreatorProfileMember{}).
 		Where("deleted_date IS NULL").
 		Where("creator_profile_id = ?", creatorID).
 		Where("account_id = ?", accountID).

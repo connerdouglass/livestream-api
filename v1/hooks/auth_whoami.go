@@ -13,7 +13,7 @@ import (
 
 func AuthWhoAmI(
 	authTokensService *services.AuthTokensService,
-	creatorsService *services.CreatorsService,
+	membershipService *services.MembershipService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -24,7 +24,7 @@ func AuthWhoAmI(
 		whoami, err := serializeWhoAmI(
 			account,
 			authTokensService,
-			creatorsService,
+			membershipService,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -42,7 +42,7 @@ func AuthWhoAmI(
 func serializeWhoAmI(
 	account *models.Account,
 	authTokensService *services.AuthTokensService,
-	creatorsService *services.CreatorsService,
+	membershipService *services.MembershipService,
 ) (map[string]interface{}, error) {
 
 	// Return nil if the account is nil
@@ -61,7 +61,7 @@ func serializeWhoAmI(
 	}
 
 	// Get all of the creator profiles on this account
-	creators, err := creatorsService.GetCreatorsByAccountID(account.ID)
+	creators, err := membershipService.GetCreatorProfiles(account.ID)
 	if err != nil {
 		return nil, err
 	}
