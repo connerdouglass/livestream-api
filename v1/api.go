@@ -116,6 +116,11 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 		s.StreamsService,
 		s.MembershipService,
 	))
+	g.POST("/studio/stream/update", hooks.StudioUpdateStream(
+		s.CreatorsService,
+		s.StreamsService,
+		s.MembershipService,
+	))
 	g.POST("/studio/streams/list", hooks.StudioListStreams(
 		s.CreatorsService,
 		s.StreamsService,

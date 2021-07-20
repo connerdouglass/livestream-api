@@ -239,3 +239,28 @@ func (s *StreamsService) GetNextStreamForCreator(creator *models.CreatorProfile)
 	}
 	return &stream, nil
 }
+
+type StreamUpdates struct {
+	Title *string `json:"title"`
+}
+
+// UpdateStream commits a series of updates to the provided stream
+func (s *StreamsService) UpdateStream(stream *models.Stream, updates *StreamUpdates) error {
+
+	// Track if any changes were made
+	var changed bool
+
+	// Update the fields
+	if updates.Title != nil {
+		stream.Title = *updates.Title
+		changed = true
+	}
+
+	// If a change was made, save to the database. Otherwise just return without error
+	if changed {
+		return s.DB.Save(stream).Error
+	} else {
+		return nil
+	}
+
+}
