@@ -174,7 +174,7 @@ func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 	var subscribers []*models.NotificationSubscriber
 	err = s.DB.
 		Where("deleted_date IS NULL").
-		Where("creator_profile_id = ?", creatorID).
+		Where("(creator_profile_id IS NULL OR creator_profile_id = ?)", creatorID).
 		Find(&subscribers).
 		Error
 	if err != nil {

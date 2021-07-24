@@ -43,7 +43,7 @@ func (s *TelegramService) Verify(user *TelegramUser) bool {
 	if user.FirstName != nil {
 		keyvals = append(keyvals, fmt.Sprintf("first_name=%s", *user.FirstName))
 	}
-	keyvals = append(keyvals, fmt.Sprintf("hash=%s", user.Hash))
+	// keyvals = append(keyvals, fmt.Sprintf("hash=%s", user.Hash))
 	keyvals = append(keyvals, fmt.Sprintf("id=%d", user.ID))
 	if user.LastName != nil {
 		keyvals = append(keyvals, fmt.Sprintf("last_name=%s", *user.LastName))
@@ -52,6 +52,9 @@ func (s *TelegramService) Verify(user *TelegramUser) bool {
 		keyvals = append(keyvals, fmt.Sprintf("photo_url=%s", *user.PhotoUrl))
 	}
 	keyvals = append(keyvals, fmt.Sprintf("username=%s", user.Username))
+
+	// Sort the keyvals slice
+	// sort.Strings(keyvals)
 
 	// Create the data check string
 	dataCheckString := strings.Join(keyvals, "\n")

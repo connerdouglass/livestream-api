@@ -14,7 +14,7 @@ func RequireLogin() gin.HandlerFunc {
 		// Get the account from the context
 		account := utils.CtxGetAccount(c)
 		if account == nil {
-			c.JSON(http.StatusForbidden, gin.H{
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "Authentication failed",
 			})
 			return

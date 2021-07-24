@@ -18,7 +18,7 @@ func RequireRtmpAuth(
 
 		// Validate the token
 		if !rtmpAuthService.CheckPasscode(token) {
-			c.JSON(http.StatusForbidden, gin.H{
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "Authentication failed",
 			})
 			return
