@@ -23,11 +23,15 @@ type TelegramUser struct {
 	Hash      string  `json:"hash"`
 }
 
+type TelegramNotificationSubscriber struct {
+	ChatID int64
+	UserID int64
+}
+
 type TelegramService struct {
-	DB                   *gorm.DB
-	BotAPIKey            string
-	BotUsername          string
-	NotificationsService *NotificationsService
+	DB          *gorm.DB
+	BotAPIKey   string
+	BotUsername string
 }
 
 // Verify verified the validity of a Telegram user
@@ -64,7 +68,7 @@ func (s *TelegramService) Verify(user *TelegramUser) bool {
 }
 
 func (s *TelegramService) Subscribe(
-	chatID int64,
+	subscriberData *TelegramNotificationSubscriber,
 ) error {
 
 	// Check if there is already a subscription
@@ -72,7 +76,7 @@ func (s *TelegramService) Subscribe(
 	err := s.DB.
 		Model(&models.NotificationSubscriber{}).
 		Where("deleted_date IS NULL").
-		Where("telegram_chat_id = ?", chatID).
+		Where("telegram_chat_id = ?", subscriberData.ChatID).
 		Count(&count).
 		Error
 	if err != nil {
@@ -84,9 +88,13 @@ func (s *TelegramService) Subscribe(
 
 	// Create the subscription
 	sub := models.NotificationSubscriber{
+		TelegramUserID: sql.NullInt64{
+			Valid: true,
+			Int64: subscriberData.UserID,
+		},
 		TelegramChatID: sql.NullInt64{
 			Valid: true,
-			Int64: chatID,
+			Int64: subscriberData.ChatID,
 		},
 		CreatedDate: time.Now(),
 	}
@@ -124,8 +132,14 @@ func (s *TelegramService) Listen() error {
 		// If the message is /start
 		if update.Message.Text == "/start" {
 
+			// Create the subscriber data
+			subData := TelegramNotificationSubscriber{
+				UserID: int64(update.Message.From.ID),
+				ChatID: update.Message.Chat.ID,
+			}
+
 			// Subscribe to notifications
-			if err := s.Subscribe(update.Message.Chat.ID); err != nil {
+			if err := s.Subscribe(&subData); err != nil {
 				fmt.Println("Error subscribing to Telegram notifications: ", err.Error())
 			}
 

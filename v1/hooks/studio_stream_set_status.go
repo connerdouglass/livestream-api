@@ -3,6 +3,7 @@ package hooks
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/godocompany/livestream-api/models"
@@ -62,10 +63,12 @@ func StudioSetStreamStatus(
 
 		// If we're going live
 		if req.Status == models.StreamStatus_Live {
+			link := os.Getenv("TEMP_NOTIFY_LINK")
 			err := notificationsService.SendNotificationToCreatorSubscribers(
 				stream.CreatorProfileID,
 				stream.CreatorProfile.Name,
 				"Stream has started!",
+				&link,
 			)
 			if err != nil {
 				fmt.Println("Error sending notifications: ", err)

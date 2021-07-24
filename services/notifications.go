@@ -3,7 +3,6 @@ package services
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -69,25 +68,16 @@ func (s *NotificationsService) GetVapidKeyPair() (*VapidKeyPair, error) {
 
 }
 
-func (s *NotificationsService) Subscribe(
+func (s *NotificationsService) BrowserSubscribe(
 	creatorID uint64,
-	browserRegistrationData *string,
-	telegramChatID *int64,
+	browserRegistrationData string,
 ) error {
 
 	// Construct the query
 	query := s.DB.
 		Model(&models.NotificationSubscriber{}).
-		Where("deleted_date IS NULL")
-
-	// If it's a browser registration
-	if browserRegistrationData != nil {
-		query = query.Where("registration_data = ?", *browserRegistrationData)
-	} else if telegramChatID != nil {
-		query = query.Where("telegram_chat_id = ?", *telegramChatID)
-	} else {
-		return errors.New("cannot subscribe without browser or telegram source")
-	}
+		Where("deleted_date IS NULL").
+		Where("registration_data = ?", browserRegistrationData)
 
 	// Check if there is already a subscription
 	var count int64
@@ -105,18 +95,11 @@ func (s *NotificationsService) Subscribe(
 			Valid: true,
 			Int64: int64(creatorID),
 		},
-		CreatedDate: time.Now(),
-	}
-	if browserRegistrationData != nil {
-		sub.RegistrationData = sql.NullString{
+		RegistrationData: sql.NullString{
 			Valid:  true,
-			String: *browserRegistrationData,
-		}
-	} else if telegramChatID != nil {
-		sub.TelegramChatID = sql.NullInt64{
-			Valid: true,
-			Int64: *telegramChatID,
-		}
+			String: browserRegistrationData,
+		},
+		CreatedDate: time.Now(),
 	}
 	return s.DB.Create(&sub).Error
 
@@ -174,12 +157,14 @@ func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 	creatorID uint64,
 	title string,
 	body string,
+	link *string,
 ) error {
 
 	// Format the title and body as JSON
-	message, err := json.Marshal(map[string]string{
+	message, err := json.Marshal(map[string]interface{}{
 		"title": title,
 		"body":  body,
+		"link":  link,
 	})
 	if err != nil {
 		return err
@@ -211,9 +196,15 @@ func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 	var wg sync.WaitGroup
 	wg.Add(2)
 
+	// Format the telegram message
+	telegramMsg := fmt.Sprintf("%s: %s", title, body)
+	if link != nil {
+		telegramMsg = fmt.Sprintf("%s\n\n%s", telegramMsg, *link)
+	}
+
 	go func() {
 		defer wg.Done()
-		s.bulkTelegramNotify(telegramChatIDs, fmt.Sprintf("%s: %s", title, body))
+		s.bulkTelegramNotify(telegramChatIDs, telegramMsg)
 	}()
 
 	go func() {

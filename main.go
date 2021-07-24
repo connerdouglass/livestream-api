@@ -63,6 +63,7 @@ func main() {
 	// Create the rest of the services
 	siteConfigService := &services.SiteConfigService{DB: db}
 	telegramService := &services.TelegramService{
+		DB:          db,
 		BotAPIKey:   os.Getenv("TELEGRAM_BOT_API_KEY"),
 		BotUsername: os.Getenv("TELEGRAM_BOT_USERNAME"),
 	}

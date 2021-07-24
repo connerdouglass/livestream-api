@@ -12,6 +12,7 @@ type NotificationSubscriber struct {
 	CreatorProfile   *CreatorProfile
 	RegistrationData sql.NullString
 	TelegramChatID   sql.NullInt64
+	TelegramUserID   sql.NullInt64
 	CreatedDate      time.Time
 	DeletedDate      sql.NullTime
 }
