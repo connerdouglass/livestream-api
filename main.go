@@ -80,7 +80,18 @@ func main() {
 	notificationsService := &services.NotificationsService{
 		DB:                db,
 		SiteConfigService: siteConfigService,
+		TelegramService:   telegramService,
 	}
+
+	//================================================================================
+	// Listen on the Telegram bot channel
+	//================================================================================
+
+	go func() {
+		if err := telegramService.Listen(); err != nil {
+			fmt.Println("Telegram bot error: ", err.Error())
+		}
+	}()
 
 	//================================================================================
 	// Setup the Gin HTTP router

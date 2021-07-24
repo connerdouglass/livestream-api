@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -21,6 +22,7 @@ type VapidKeyPair struct {
 type NotificationsService struct {
 	DB                *gorm.DB
 	SiteConfigService *SiteConfigService
+	TelegramService   *TelegramService
 }
 
 // GetVapidKeyPair gets the keypair for VAPID keys
@@ -69,17 +71,27 @@ func (s *NotificationsService) GetVapidKeyPair() (*VapidKeyPair, error) {
 
 func (s *NotificationsService) Subscribe(
 	creatorID uint64,
-	registrationData string,
+	browserRegistrationData *string,
+	telegramChatID *int64,
 ) error {
+
+	// Construct the query
+	query := s.DB.
+		Model(&models.NotificationSubscriber{}).
+		Where("deleted_date IS NULL")
+
+	// If it's a browser registration
+	if browserRegistrationData != nil {
+		query = query.Where("registration_data = ?", *browserRegistrationData)
+	} else if telegramChatID != nil {
+		query = query.Where("telegram_chat_id = ?", *telegramChatID)
+	} else {
+		return errors.New("cannot subscribe without browser or telegram source")
+	}
 
 	// Check if there is already a subscription
 	var count int64
-	err := s.DB.
-		Model(&models.NotificationSubscriber{}).
-		Where("deleted_date IS NULL").
-		Where("registration_data = ?", registrationData).
-		Count(&count).
-		Error
+	err := query.Count(&count).Error
 	if err != nil {
 		return err
 	}
@@ -89,12 +101,22 @@ func (s *NotificationsService) Subscribe(
 
 	// Create the subscription
 	sub := models.NotificationSubscriber{
-		CreatorProfileID: creatorID,
-		RegistrationData: sql.NullString{
-			Valid:  true,
-			String: registrationData,
+		CreatorProfileID: sql.NullInt64{
+			Valid: true,
+			Int64: int64(creatorID),
 		},
 		CreatedDate: time.Now(),
+	}
+	if browserRegistrationData != nil {
+		sub.RegistrationData = sql.NullString{
+			Valid:  true,
+			String: *browserRegistrationData,
+		}
+	} else if telegramChatID != nil {
+		sub.TelegramChatID = sql.NullInt64{
+			Valid: true,
+			Int64: *telegramChatID,
+		}
 	}
 	return s.DB.Create(&sub).Error
 
@@ -136,6 +158,18 @@ func (s *NotificationsService) SendBrowserNotification(options *BrowserNotificat
 
 }
 
+type TelegramNotification struct {
+	ChatID  int64
+	Message string
+}
+
+func (s *NotificationsService) SendTelegramNotification(options *TelegramNotification) error {
+
+	// Send the message over Telegram
+	return s.TelegramService.SendMessage(options.ChatID, options.Message)
+
+}
+
 func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 	creatorID uint64,
 	title string,
@@ -164,20 +198,48 @@ func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 
 	// Seperate out the browser notifications and telegram notifications
 	var browserSubscribers []string
+	var telegramChatIDs []int64
 	for _, sub := range subscribers {
 		if sub.RegistrationData.Valid {
 			browserSubscribers = append(browserSubscribers, sub.RegistrationData.String)
-		} else {
-			// TODO: Handle Telegram notifications
+		} else if sub.TelegramChatID.Valid {
+			telegramChatIDs = append(telegramChatIDs, sub.TelegramChatID.Int64)
 		}
 	}
 
 	// Create a wait group for all the subscribers
 	var wg sync.WaitGroup
-	wg.Add(len(browserSubscribers))
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		s.bulkTelegramNotify(telegramChatIDs, fmt.Sprintf("%s: %s", title, body))
+	}()
+
+	go func() {
+		defer wg.Done()
+		s.bulkBrowserNotify(browserSubscribers, message)
+	}()
+
+	// Wait for all the notifications to finish
+	wg.Wait()
+
+	// Return without error
+	return nil
+
+}
+
+func (s *NotificationsService) bulkBrowserNotify(
+	registrationDatas []string,
+	message []byte,
+) {
+
+	// Create a wait group for all the subscribers
+	var wg sync.WaitGroup
+	wg.Add(len(registrationDatas))
 
 	// Loop through the notifications
-	for _, regData := range browserSubscribers {
+	for _, regData := range registrationDatas {
 		go func(registrationData string) {
 
 			// Defer the cleanup
@@ -195,10 +257,40 @@ func (s *NotificationsService) SendNotificationToCreatorSubscribers(
 		}(regData)
 	}
 
-	// Wait for all the notifications to finish
+	// Wait for them all to complete
 	wg.Wait()
 
-	// Return without error
-	return nil
+}
+
+func (s *NotificationsService) bulkTelegramNotify(
+	chatIDs []int64,
+	message string,
+) {
+
+	// Create a wait group for all the subscribers
+	var wg sync.WaitGroup
+	wg.Add(len(chatIDs))
+
+	// Loop through the telegram chat ids
+	for _, telegramChatID := range chatIDs {
+		go func(chatID int64) {
+
+			// Defer the cleanup
+			defer wg.Done()
+
+			// Send the notification
+			err := s.SendTelegramNotification(&TelegramNotification{
+				ChatID:  chatID,
+				Message: message,
+			})
+			if err != nil {
+				fmt.Println("Error sending notification: ", err.Error())
+			}
+
+		}(telegramChatID)
+	}
+
+	// Wait for all the notifications to finish
+	wg.Wait()
 
 }

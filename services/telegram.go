@@ -1,10 +1,16 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/godocompany/livestream-api/models"
 	"github.com/godocompany/livestream-api/utils"
+	"gorm.io/gorm"
 )
 
 type TelegramUser struct {
@@ -18,8 +24,10 @@ type TelegramUser struct {
 }
 
 type TelegramService struct {
-	BotAPIKey   string
-	BotUsername string
+	DB                   *gorm.DB
+	BotAPIKey            string
+	BotUsername          string
+	NotificationsService *NotificationsService
 }
 
 // Verify verified the validity of a Telegram user
@@ -53,4 +61,105 @@ func (s *TelegramService) Verify(user *TelegramUser) bool {
 	// Compare the hashes
 	return hash == user.Hash
 
+}
+
+func (s *TelegramService) Subscribe(
+	chatID int64,
+) error {
+
+	// Check if there is already a subscription
+	var count int64
+	err := s.DB.
+		Model(&models.NotificationSubscriber{}).
+		Where("deleted_date IS NULL").
+		Where("telegram_chat_id = ?", chatID).
+		Count(&count).
+		Error
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	// Create the subscription
+	sub := models.NotificationSubscriber{
+		TelegramChatID: sql.NullInt64{
+			Valid: true,
+			Int64: chatID,
+		},
+		CreatedDate: time.Now(),
+	}
+	return s.DB.Create(&sub).Error
+
+}
+
+func (s *TelegramService) Listen() error {
+
+	// Create the Telegram bot client
+	bot, err := tgbotapi.NewBotAPI(s.BotAPIKey)
+	if err != nil {
+		return err
+	}
+	bot.Debug = true
+
+	// Create a channel for bot updates
+	updates, err := bot.GetUpdatesChan(tgbotapi.UpdateConfig{
+		Offset:  0,
+		Limit:   0,
+		Timeout: 60,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Iterate through the updates on the channel
+	for update := range updates {
+		if update.Message == nil { // ignore any non-Message Updates
+			continue
+		}
+
+		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+		// If the message is /start
+		if update.Message.Text == "/start" {
+
+			// Subscribe to notifications
+			if err := s.Subscribe(update.Message.Chat.ID); err != nil {
+				fmt.Println("Error subscribing to Telegram notifications: ", err.Error())
+			}
+
+		}
+
+		// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		// msg.ReplyToMessageID = update.Message.MessageID
+
+		// bot.Send(msg)
+
+	}
+
+	// Return no error
+	return nil
+
+}
+
+func (s *TelegramService) SendMessage(chatID int64, message string) error {
+
+	// Create the Telegram bot client
+	bot, err := tgbotapi.NewBotAPI(s.BotAPIKey)
+	if err != nil {
+		return err
+	}
+	bot.Debug = true
+
+	// Create and send the message
+	msg := tgbotapi.NewMessage(chatID, message)
+
+	// Send the message
+	if _, err := bot.Send(msg); err != nil {
+		return err
+	}
+
+	// Return without error
+	return nil
 }

@@ -25,7 +25,7 @@ func NotificationsSubscribe(
 		}
 
 		// Subscribe to notifications
-		if err := notificationsService.Subscribe(req.CreatorID, req.RegistrationData); err != nil {
+		if err := notificationsService.Subscribe(req.CreatorID, &req.RegistrationData, nil); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
