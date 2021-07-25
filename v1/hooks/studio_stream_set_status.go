@@ -19,7 +19,7 @@ type StudioSetStreamStatusReq struct {
 func StudioSetStreamStatus(
 	streamsService *services.StreamsService,
 	membershipService *services.MembershipService,
-	notificationsService *services.NotificationsService,
+	notifier services.Notifier,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -64,11 +64,13 @@ func StudioSetStreamStatus(
 		// If we're going live
 		if req.Status == models.StreamStatus_Live {
 			link := os.Getenv("TEMP_NOTIFY_LINK")
-			err := notificationsService.SendNotificationToCreatorSubscribers(
+			err := notifier.NotifySubscribers(
 				stream.CreatorProfileID,
-				stream.CreatorProfile.Name,
-				"Stream has started!",
-				&link,
+				&services.Notification{
+					Title: stream.CreatorProfile.Name,
+					Body:  "Stream has started!",
+					Link:  &link,
+				},
 			)
 			if err != nil {
 				fmt.Println("Error sending notifications: ", err)

@@ -11,13 +11,13 @@ import (
 func AppState(
 	mainCreatorUsername string,
 	telegramService *services.TelegramService,
-	notificationsService *services.NotificationsService,
+	browserNotifier *services.BrowserNotifier,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get the vapid keys for the notifications service
 		var vapidPublicKey *string
-		vapid, err := notificationsService.GetVapidKeyPair()
+		vapid, err := browserNotifier.GetVapidKeyPair()
 		if err != nil {
 			fmt.Println("Error getting VAPID key: ", err.Error())
 		}

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -70,16 +69,18 @@ func (s *TelegramService) Verify(user *TelegramUser) bool {
 
 }
 
-func (s *TelegramService) Subscribe(
-	subscriberData *TelegramNotificationSubscriber,
+func (s *TelegramService) RegisterTarget(
+	userID int64,
+	chatID int64,
 ) error {
 
-	// Check if there is already a subscription
+	// Check if there is already a notification target for this user
 	var count int64
 	err := s.DB.
-		Model(&models.NotificationSubscriber{}).
+		Model(&models.TelegramNotifyTarget{}).
 		Where("deleted_date IS NULL").
-		Where("telegram_chat_id = ?", subscriberData.ChatID).
+		Where("telegram_chat_id = ?", chatID).
+		Where("telegram_user_id = ?", userID).
 		Count(&count).
 		Error
 	if err != nil {
@@ -89,19 +90,13 @@ func (s *TelegramService) Subscribe(
 		return nil
 	}
 
-	// Create the subscription
-	sub := models.NotificationSubscriber{
-		TelegramUserID: sql.NullInt64{
-			Valid: true,
-			Int64: subscriberData.UserID,
-		},
-		TelegramChatID: sql.NullInt64{
-			Valid: true,
-			Int64: subscriberData.ChatID,
-		},
-		CreatedDate: time.Now(),
+	// Create the notification target
+	target := models.TelegramNotifyTarget{
+		TelegramUserID: userID,
+		TelegramChatID: chatID,
+		CreatedDate:    time.Now(),
 	}
-	return s.DB.Create(&sub).Error
+	return s.DB.Create(&target).Error
 
 }
 
@@ -135,23 +130,15 @@ func (s *TelegramService) Listen() error {
 		// If the message is /start
 		if update.Message.Text == "/start" {
 
-			// Create the subscriber data
-			subData := TelegramNotificationSubscriber{
-				UserID: int64(update.Message.From.ID),
-				ChatID: update.Message.Chat.ID,
-			}
-
 			// Subscribe to notifications
-			if err := s.Subscribe(&subData); err != nil {
+			if err := s.RegisterTarget(
+				int64(update.Message.From.ID),
+				update.Message.Chat.ID,
+			); err != nil {
 				fmt.Println("Error subscribing to Telegram notifications: ", err.Error())
 			}
 
 		}
-
-		// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		// msg.ReplyToMessageID = update.Message.MessageID
-
-		// bot.Send(msg)
 
 	}
 

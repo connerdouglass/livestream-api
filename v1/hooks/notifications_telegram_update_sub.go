@@ -7,25 +7,30 @@ import (
 	"github.com/godocompany/livestream-api/services"
 )
 
-type NotificationsSubscribeReq struct {
-	RegistrationData string `json:"registration_data"`
-	CreatorID        uint64 `json:"creator_id"`
+type TelegramNotificationsUpdateSubReq struct {
+	User       services.TelegramUser `json:"user"`
+	CreatorID  uint64                `json:"creator_id"`
+	Subscribed bool                  `json:"subscribed"`
 }
 
-func NotificationsSubscribe(
-	notificationsService *services.NotificationsService,
+func TelegramNotificationsUpdateSub(
+	telegramNotifier *services.TelegramNotifier,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get the request body
-		var req NotificationsSubscribeReq
+		var req TelegramNotificationsUpdateSubReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Subscribe to notifications
-		if err := notificationsService.BrowserSubscribe(req.CreatorID, req.RegistrationData); err != nil {
+		if err := telegramNotifier.UpdateSub(
+			&req.User,
+			req.CreatorID,
+			req.Subscribed,
+		); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

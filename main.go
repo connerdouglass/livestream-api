@@ -49,11 +49,14 @@ func main() {
 	// Migrate the schema
 	db.AutoMigrate(
 		&models.Account{},
+		&models.BrowserNotifySub{},
+		&models.BrowserNotifyTarget{},
 		&models.CreatorProfileMember{},
 		&models.CreatorProfile{},
-		&models.NotificationSubscriber{},
 		&models.SiteConfig{},
 		&models.Stream{},
+		&models.TelegramNotifySub{},
+		&models.TelegramNotifyTarget{},
 	)
 
 	//================================================================================
@@ -78,11 +81,20 @@ func main() {
 	}
 	streamsService := &services.StreamsService{DB: db}
 	membershipService := &services.MembershipService{DB: db}
-	notificationsService := &services.NotificationsService{
+
+	// Create the notifiers
+	browserNotifier := &services.BrowserNotifier{
 		DB:                db,
 		SiteConfigService: siteConfigService,
-		TelegramService:   telegramService,
 	}
+	telegramNotifier := &services.TelegramNotifier{
+		DB:              db,
+		TelegramService: telegramService,
+	}
+	notifiers := services.NewNotifierGroup(
+		browserNotifier,
+		telegramNotifier,
+	)
 
 	//================================================================================
 	// Listen on the Telegram bot channel
@@ -110,16 +122,18 @@ func main() {
 
 	// Create the API instance
 	api := &v1.Server{
-		MainCreatorUsername:  os.Getenv("MAIN_CREATOR_USERNAME"),
-		SiteConfigService:    siteConfigService,
-		AccountsService:      accountsService,
-		AuthTokensService:    authTokensService,
-		CreatorsService:      creatorsService,
-		MembershipService:    membershipService,
-		RtmpAuthService:      rtmpAuthService,
-		StreamsService:       streamsService,
-		TelegramService:      telegramService,
-		NotificationsService: notificationsService,
+		MainCreatorUsername: os.Getenv("MAIN_CREATOR_USERNAME"),
+		SiteConfigService:   siteConfigService,
+		AccountsService:     accountsService,
+		AuthTokensService:   authTokensService,
+		CreatorsService:     creatorsService,
+		MembershipService:   membershipService,
+		RtmpAuthService:     rtmpAuthService,
+		StreamsService:      streamsService,
+		TelegramService:     telegramService,
+		Notifier:            notifiers,
+		BrowserNotifier:     browserNotifier,
+		TelegramNotifier:    telegramNotifier,
 	}
 
 	// Mount the API routes

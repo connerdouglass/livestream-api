@@ -9,16 +9,18 @@ import (
 
 // Server is the API server instance
 type Server struct {
-	MainCreatorUsername  string
-	SiteConfigService    *services.SiteConfigService
-	AccountsService      *services.AccountsService
-	AuthTokensService    *services.AuthTokensService
-	MembershipService    *services.MembershipService
-	CreatorsService      *services.CreatorsService
-	RtmpAuthService      *services.RtmpAuthService
-	StreamsService       *services.StreamsService
-	TelegramService      *services.TelegramService
-	NotificationsService *services.NotificationsService
+	MainCreatorUsername string
+	SiteConfigService   *services.SiteConfigService
+	AccountsService     *services.AccountsService
+	AuthTokensService   *services.AuthTokensService
+	MembershipService   *services.MembershipService
+	CreatorsService     *services.CreatorsService
+	RtmpAuthService     *services.RtmpAuthService
+	StreamsService      *services.StreamsService
+	TelegramService     *services.TelegramService
+	BrowserNotifier     *services.BrowserNotifier
+	TelegramNotifier    *services.TelegramNotifier
+	Notifier            services.Notifier
 }
 
 // Setup mounts the API server to the given group
@@ -45,7 +47,7 @@ func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 	g.POST("/app/get-state", hooks.AppState(
 		s.MainCreatorUsername,
 		s.TelegramService,
-		s.NotificationsService,
+		s.BrowserNotifier,
 	))
 	g.POST("/auth/login", hooks.AuthLogin(
 		s.AccountsService,
@@ -59,8 +61,17 @@ func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 	g.POST("/stream/get-meta", hooks.GetStreamMeta(
 		s.StreamsService,
 	))
-	g.POST("/notifications/subscribe", hooks.NotificationsSubscribe(
-		s.NotificationsService,
+	g.POST("/notifications/browser/state", hooks.BrowserNotificationsState(
+		s.BrowserNotifier,
+	))
+	g.POST("/notifications/browser/update-sub", hooks.BrowserNotificationsUpdateSub(
+		s.BrowserNotifier,
+	))
+	g.POST("/notifications/telegram/state", hooks.TelegramNotificationsState(
+		s.TelegramNotifier,
+	))
+	g.POST("/notifications/telegram/update-sub", hooks.TelegramNotificationsUpdateSub(
+		s.TelegramNotifier,
 	))
 
 }
@@ -104,7 +115,7 @@ func (s *Server) setupAuthenticatedHooks(g *gin.RouterGroup) {
 	g.POST("/studio/stream/set-status", hooks.StudioSetStreamStatus(
 		s.StreamsService,
 		s.MembershipService,
-		s.NotificationsService,
+		s.Notifier,
 	))
 	g.POST("/studio/stream/get", hooks.StudioGetStream(
 		s.CreatorsService,
