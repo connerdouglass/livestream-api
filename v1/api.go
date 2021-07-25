@@ -9,6 +9,7 @@ import (
 
 // Server is the API server instance
 type Server struct {
+	PlatformTitle       string
 	MainCreatorUsername string
 	SiteConfigService   *services.SiteConfigService
 	AccountsService     *services.AccountsService
@@ -45,6 +46,7 @@ func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 
 	// Register public API routes
 	g.POST("/app/get-state", hooks.AppState(
+		s.PlatformTitle,
 		s.MainCreatorUsername,
 		s.TelegramService,
 		s.BrowserNotifier,

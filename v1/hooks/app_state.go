@@ -9,6 +9,7 @@ import (
 )
 
 func AppState(
+	platformTitle string,
 	mainCreatorUsername string,
 	telegramService *services.TelegramService,
 	browserNotifier *services.BrowserNotifier,
@@ -28,6 +29,7 @@ func AppState(
 		// Return the app state
 		c.JSON(http.StatusOK, gin.H{
 			"data": gin.H{
+				"platform_title":        platformTitle,
 				"main_creator_username": mainCreatorUsername,
 				"telegram_bot_username": telegramService.BotUsername,
 				"vapid_public_key":      vapidPublicKey,

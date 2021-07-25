@@ -122,6 +122,7 @@ func main() {
 
 	// Create the API instance
 	api := &v1.Server{
+		PlatformTitle:       os.Getenv("PLATFORM_TITLE"),
 		MainCreatorUsername: os.Getenv("MAIN_CREATOR_USERNAME"),
 		SiteConfigService:   siteConfigService,
 		AccountsService:     accountsService,
