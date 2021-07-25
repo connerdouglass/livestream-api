@@ -64,12 +64,17 @@ func StudioSetStreamStatus(
 		// If we're going live
 		if req.Status == models.StreamStatus_Live {
 			link := os.Getenv("TEMP_NOTIFY_LINK")
+			var image *string
+			if len(stream.CreatorProfile.Image) > 0 {
+				image = &stream.CreatorProfile.Image
+			}
 			err := notifier.NotifySubscribers(
 				stream.CreatorProfileID,
 				&services.Notification{
 					Title: stream.CreatorProfile.Name,
-					Body:  "Stream has started!",
+					Body:  fmt.Sprintf("%s just went live!", stream.CreatorProfile.Name),
 					Link:  &link,
+					Image: image,
 				},
 			)
 			if err != nil {

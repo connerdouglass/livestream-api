@@ -51,6 +51,7 @@ func (bn *BrowserNotifier) NotifySubscribers(
 		"title": notification.Title,
 		"body":  notification.Body,
 		"link":  notification.Link,
+		"image": notification.Image,
 	})
 	if err != nil {
 		return err
