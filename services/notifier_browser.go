@@ -211,9 +211,9 @@ func (bn *BrowserNotifier) getNotifySub(
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, nil
 		}
-		return nil, nil
+		return nil, err
 	}
 	return &sub, nil
 }
