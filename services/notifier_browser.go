@@ -36,7 +36,7 @@ func (bn *BrowserNotifier) NotifySubscribers(
 			"id IN (?)",
 			bn.DB.
 				Select("browser_notify_target_id").
-				Model(&models.TelegramNotifySub{}).
+				Model(&models.BrowserNotifySub{}).
 				Where("deleted_date IS NULL").
 				Where("creator_profile_id = ?", creatorID),
 		).
