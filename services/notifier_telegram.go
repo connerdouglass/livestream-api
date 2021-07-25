@@ -40,7 +40,7 @@ func (tn *TelegramNotifier) NotifySubscribers(
 	}
 
 	// Format the message parts into one string to send via Telegram
-	message := fmt.Sprintf("%s: %s", notification.Title, notification.Body)
+	message := notification.Body
 	if notification.Link != nil {
 		message = fmt.Sprintf("%s\n\n%s", message, *notification.Link)
 	}
