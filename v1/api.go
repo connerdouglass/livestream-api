@@ -64,6 +64,9 @@ func (s *Server) setupPublicHooks(g *gin.RouterGroup) {
 	g.POST("/notifications/browser/state", hooks.BrowserNotificationsState(
 		s.BrowserNotifier,
 	))
+	g.POST("/notifications/browser/register", hooks.BrowserNotificationsRegister(
+		s.BrowserNotifier,
+	))
 	g.POST("/notifications/browser/update-sub", hooks.BrowserNotificationsUpdateSub(
 		s.BrowserNotifier,
 	))

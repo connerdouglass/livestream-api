@@ -260,15 +260,17 @@ func (bn *BrowserNotifier) UpdateSub(
 
 }
 
+func (bn *BrowserNotifier) RegisterTarget(registrationData string) error {
+	_, err := bn.getOrCreateTarget(registrationData)
+	return err
+}
+
 func (bn *BrowserNotifier) GetAllSubs(registrationData string) ([]*models.BrowserNotifySub, error) {
 
 	// Get or create the target
 	target, err := bn.getOrCreateTarget(registrationData)
 	if err != nil {
 		return nil, err
-	}
-	if target == nil {
-		return nil, nil
 	}
 
 	// Get all of the browser subscriptions

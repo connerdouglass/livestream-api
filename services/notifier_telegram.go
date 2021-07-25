@@ -164,6 +164,9 @@ func (tn *TelegramNotifier) GetAllSubs(user *TelegramUser) (bool, []*models.Tele
 	if err != nil {
 		return false, nil, err
 	}
+	if target == nil {
+		return false, nil, nil
+	}
 
 	// Get all of the telegram subscriptions
 	var subs []*models.TelegramNotifySub
