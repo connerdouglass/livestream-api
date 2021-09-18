@@ -1,4 +1,4 @@
-module github.com/godocompany/livestream-api
+module github.com/connerdouglass/livestream-api
 
 go 1.16
 

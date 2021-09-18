@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/connerdouglass/livestream-api/services"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/services"
 )
 
 func AppState(

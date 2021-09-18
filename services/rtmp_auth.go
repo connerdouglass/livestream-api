@@ -1,7 +1,7 @@
 package services
 
 // RtmpAuthService manages authentication for the RTMP server when it calls into this
-// API. By design, the RTMP server (github.com/godocompany/livestream-rtmp) has a
+// API. By design, the RTMP server (github.com/connerdouglass/livestream-rtmp) has a
 // hard-coded passcode.
 //
 // For more security later, we can validate the caller IP address, passcode, and more.

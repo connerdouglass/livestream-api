@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/connerdouglass/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/godocompany/livestream-api/models"
-	"github.com/godocompany/livestream-api/utils"
 	"gorm.io/gorm"
 )
 

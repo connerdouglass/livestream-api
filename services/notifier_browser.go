@@ -9,7 +9,7 @@ import (
 	"time"
 
 	webpush "github.com/SherClockHolmes/webpush-go"
-	"github.com/godocompany/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/models"
 	"gorm.io/gorm"
 )
 

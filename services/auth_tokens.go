@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/connerdouglass/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/utils"
 	"github.com/dgrijalva/jwt-go/v4"
-	"github.com/godocompany/livestream-api/models"
-	"github.com/godocompany/livestream-api/utils"
 	"gorm.io/gorm"
 )
 

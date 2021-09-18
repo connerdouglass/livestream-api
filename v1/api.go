@@ -1,10 +1,10 @@
 package v1
 
 import (
+	"github.com/connerdouglass/livestream-api/services"
+	"github.com/connerdouglass/livestream-api/v1/hooks"
+	"github.com/connerdouglass/livestream-api/v1/middleware"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/services"
-	"github.com/godocompany/livestream-api/v1/hooks"
-	"github.com/godocompany/livestream-api/v1/middleware"
 )
 
 // Server is the API server instance

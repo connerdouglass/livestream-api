@@ -3,8 +3,8 @@ package middleware
 import (
 	"strings"
 
+	"github.com/connerdouglass/livestream-api/services"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/services"
 )
 
 // CheckAuth creates a middleware function that parses auth token header and adds the account to the context

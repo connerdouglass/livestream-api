@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"github.com/connerdouglass/livestream-api/models"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/models"
 )
 
 // CtxGetAccount gets the account (or nil) from a Gin context

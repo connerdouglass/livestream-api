@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/connerdouglass/livestream-api/services"
+	"github.com/connerdouglass/livestream-api/v1/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/services"
-	"github.com/godocompany/livestream-api/v1/utils"
 )
 
 type StudioCreateStreamReq struct {

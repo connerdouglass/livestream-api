@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/connerdouglass/livestream-api/services"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/services"
 )
 
 // RequireRtmpAuth creates a middleware function to require RTMP auth on a hook

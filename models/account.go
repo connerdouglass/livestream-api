@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/godocompany/livestream-api/utils"
+	"github.com/connerdouglass/livestream-api/utils"
 )
 
 // Account is a creator account that has a profile on the platform

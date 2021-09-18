@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/godocompany/livestream-api/models"
-	"github.com/godocompany/livestream-api/utils"
+	"github.com/connerdouglass/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/utils"
 	"gorm.io/gorm"
 )
 

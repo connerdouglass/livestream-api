@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/connerdouglass/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/services"
+	v1 "github.com/connerdouglass/livestream-api/v1"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/models"
-	"github.com/godocompany/livestream-api/services"
-	v1 "github.com/godocompany/livestream-api/v1"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )

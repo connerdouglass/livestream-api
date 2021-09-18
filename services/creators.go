@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/godocompany/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/models"
 	"gorm.io/gorm"
 )
 

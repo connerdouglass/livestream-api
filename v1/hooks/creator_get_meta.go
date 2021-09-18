@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/connerdouglass/livestream-api/models"
+	"github.com/connerdouglass/livestream-api/services"
+	"github.com/connerdouglass/livestream-api/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/models"
-	"github.com/godocompany/livestream-api/services"
-	"github.com/godocompany/livestream-api/utils"
 )
 
 type GetCreatorMetaReq struct {

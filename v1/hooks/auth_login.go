@@ -3,8 +3,8 @@ package hooks
 import (
 	"net/http"
 
+	"github.com/connerdouglass/livestream-api/services"
 	"github.com/gin-gonic/gin"
-	"github.com/godocompany/livestream-api/services"
 )
 
 type AuthLoginReq struct {
